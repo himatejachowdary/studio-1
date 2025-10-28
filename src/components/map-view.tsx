@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { MapPin, Loader, AlertTriangle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import 'mappls-web-maps/dist/mappls-web-maps.css';
 
 // Dynamically import mappls-web-maps to avoid SSR issues
 let mappls: any;
@@ -21,7 +20,7 @@ export function MapView() {
   const [status, setStatus] = useState<MapStatus>('loading');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  const MAPPPLS_API_KEY = "23ae46dccdaf9bda190c95fffbc1d923";
+  const MAPPPLS_API_KEY = process.env.NEXT_PUBLIC_MAPPPLS_API_KEY;
 
   useEffect(() => {
     let isMounted = true;
