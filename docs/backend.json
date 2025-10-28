@@ -11,13 +11,19 @@
           "description": "Email address of the user.",
           "format": "email"
         },
+        "phoneNumber": {
+          "type": "string",
+          "description": "Phone number of the user."
+        },
         "createdAt": {
-            "type": "string",
-            "format": "date-time",
-            "description": "Timestamp when the profile was created."
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the profile was created."
         }
       },
-      "required": ["createdAt"]
+      "required": [
+        "createdAt"
+      ]
     },
     "Diagnosis": {
       "$schema": "http://json-schema.org/draft-07/schema#",
@@ -30,20 +36,20 @@
           "description": "The symptoms provided by the user for this diagnosis."
         },
         "medicalHistory": {
-            "type": "string",
-            "description": "The medical history provided for this diagnosis, if any."
+          "type": "string",
+          "description": "The medical history provided for this diagnosis, if any."
         },
         "possibleConditions": {
           "type": "string",
           "description": "List of possible medical conditions suggested by the AI."
         },
-         "confidenceLevel": {
+        "confidenceLevel": {
           "type": "string",
           "description": "The AI's confidence in the diagnosis."
         },
         "nextSteps": {
-            "type": "string",
-            "description": "Recommended next steps for the user."
+          "type": "string",
+          "description": "Recommended next steps for the user."
         },
         "timestamp": {
           "type": "string",
@@ -62,7 +68,9 @@
   },
   "auth": {
     "providers": [
-      "anonymous"
+      "anonymous",
+      "email",
+      "phone"
     ]
   },
   "firestore": {

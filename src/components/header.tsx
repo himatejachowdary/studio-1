@@ -22,7 +22,7 @@ export function Header({ isLoggedIn, onLogin, onLogout }: HeaderProps) {
           Log Out
         </Button>
       ) : (
-        <Button onClick={onLogin} variant="outline" size="sm">
+        <Button onClick={onLogin} variant="default" size="sm">
           <LogIn className="mr-2 h-4 w-4" />
           Log In / Sign Up
         </Button>
