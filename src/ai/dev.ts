@@ -1,1 +1,6 @@
-// Flows will be imported for their side effects in this file.
+import { config } from 'dotenv';
+config();
+
+import '@/ai/flows/interpret-natural-language-input.ts';
+import '@/ai/flows/analyze-symptoms-and-suggest-conditions.ts';
+import '@/ai/flows/incorporate-medical-history-for-diagnosis.ts';
