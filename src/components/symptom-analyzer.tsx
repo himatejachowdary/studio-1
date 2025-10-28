@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/alert-dialog"
 
 type SymptomAnalyzerProps = {
-  onAnalysisUpdate: (result: AnalysisResult | null) => void;
+  onAnalysisUpdate: (result: AnalysisResult | null, data: {symptoms: string, medicalHistory?: string}) => void;
   onLoadingChange: (isLoading: boolean) => void;
   onErrorChange: (error: string | null) => void;
   onSos: () => void;
@@ -50,7 +50,7 @@ function SubmitButton() {
 }
 
 export function SymptomAnalyzer({ onAnalysisUpdate, onLoadingChange, onErrorChange, onSos }: SymptomAnalyzerProps) {
-  const initialState = { message: '', result: null, error: null };
+  const initialState = { message: '', result: null, error: null, symptoms: '', medicalHistory: '' };
   const [state, formAction] = useFormState(getAnalysis, initialState);
   const { pending } = useFormStatus();
   const formRef = useRef<HTMLFormElement>(null);
@@ -68,10 +68,10 @@ export function SymptomAnalyzer({ onAnalysisUpdate, onLoadingChange, onErrorChan
         description: state.error,
       });
       onErrorChange(state.error);
-      onAnalysisUpdate(null);
+      onAnalysisUpdate(null, {symptoms: '', medicalHistory: ''});
     }
     if (state.result) {
-      onAnalysisUpdate(state.result);
+      onAnalysisUpdate(state.result, {symptoms: state.symptoms, medicalHistory: state.medicalHistory});
       onErrorChange(null);
     }
   }, [state, onAnalysisUpdate, onErrorChange, toast]);

@@ -6,20 +6,62 @@ import { AnalysisResults } from './analysis-results';
 import { DoctorRecommendations } from './doctor-recommendations';
 import { MapView } from './map-view';
 import type { AnalysisResult, Doctor } from '@/lib/types';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Brain, DatabaseZap } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Brain, DatabaseZap, Save } from 'lucide-react';
+import { useUser, useFirestore } from '@/firebase';
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
 
 export function SymptoScanDashboard() {
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [doctors, setDoctors] = useState<Doctor[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [symptomData, setSymptomData] = useState<{symptoms: string, medicalHistory?: string} | null>(null);
+
+
+  const { user } = useUser();
+  const firestore = useFirestore();
+  const { toast } = useToast();
+
+  const handleAnalysis = (res: AnalysisResult | null, data: {symptoms: string, medicalHistory?: string}) => {
+    setAnalysisResult(res);
+    setSymptomData(data);
+    if(res) setError(null);
+  }
+
+  const handleSaveAnalysis = async () => {
+    if (!user || !firestore || !analysisResult || !symptomData) {
+       toast({
+        variant: "destructive",
+        title: "Error",
+        description: "You must be logged in and have an analysis to save.",
+      });
+      return;
+    }
+
+    const diagnosisData = {
+        ...analysisResult,
+        ...symptomData,
+        timestamp: serverTimestamp()
+    };
+    
+    const diagnosesColRef = collection(firestore, `users/${user.uid}/diagnoses`);
+    addDocumentNonBlocking(diagnosesColRef, diagnosisData);
+
+    toast({
+      title: "Analysis Saved",
+      description: "Your symptom analysis has been saved to your history.",
+    });
+  };
+
 
   const handleSosSearch = async () => {
     setIsLoading(true);
     setAnalysisResult(null);
     setError(null);
-    // Simulate an analysis for "Emergency" to trigger doctor search
     const emergencyAnalysis: AnalysisResult = {
       possibleConditions: 'Emergency Care',
       confidenceLevel: 'High',
@@ -33,10 +75,7 @@ export function SymptoScanDashboard() {
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
         <div className="lg:col-span-2 flex flex-col gap-8">
           <SymptomAnalyzer
-            onAnalysisUpdate={(res) => {
-              setAnalysisResult(res);
-              if(res) setError(null);
-            }}
+            onAnalysisUpdate={handleAnalysis}
             onLoadingChange={setIsLoading}
             onErrorChange={setError}
             onSos={handleSosSearch}
@@ -44,21 +83,24 @@ export function SymptoScanDashboard() {
            <Card>
             <CardHeader className="flex flex-row items-center gap-2">
               <DatabaseZap className="w-6 h-6 text-primary" />
-              <CardTitle className="font-headline">Data Backup Plan</CardTitle>
+              <CardTitle className="font-headline">Your Medical History</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4 text-sm text-muted-foreground">
                 <p>
-                    To provide long-term value, we can securely store your symptom history and analysis results.
+                    Your symptom analyses can be securely stored in your personal health record.
                 </p>
                 <ul className="list-disc list-inside space-y-2">
-                    <li><strong>Secure Storage:</strong> Use a database like Firebase Firestore to save each analysis.</li>
-                    <li><strong>User History:</strong> Allow you to view past symptom checks and AI suggestions.</li>
-                    <li><strong>Data Privacy:</strong> All data would be private and associated only with your account.</li>
+                    <li><strong>Secure Storage:</strong> We use Firestore to save each analysis under your account.</li>
+                    <li><strong>View History:</strong> In the future, you'll be able to view past symptom checks.</li>
+                    <li><strong>Data Privacy:</strong> All data is private to your account.</li>
                 </ul>
-                 <p className="font-semibold text-foreground/80">
-                    This would allow for better tracking of your health over time.
-                </p>
             </CardContent>
+            <CardFooter>
+                 <Button onClick={handleSaveAnalysis} disabled={!analysisResult || isLoading}>
+                    <Save className="mr-2 h-4 w-4" />
+                    Save Current Analysis
+                </Button>
+            </CardFooter>
           </Card>
         </div>
         <div className="lg:col-span-3 flex flex-col gap-8">

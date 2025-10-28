@@ -10,10 +10,18 @@ const schema = z.object({
   useMedicalHistory: z.boolean().optional(),
 });
 
+type FormState = {
+    message: string;
+    result: AnalysisResult | null;
+    error: string | null;
+    symptoms: string;
+    medicalHistory: string;
+}
+
 export async function getAnalysis(
   prevState: any,
   formData: FormData
-): Promise<{ message: string; result: AnalysisResult | null; error: string | null }> {
+): Promise<FormState> {
   const validatedFields = schema.safeParse({
     symptoms: formData.get('symptoms'),
     medicalHistory: formData.get('medicalHistory'),
@@ -25,13 +33,27 @@ export async function getAnalysis(
       message: "Validation failed",
       result: null,
       error: validatedFields.error.flatten().fieldErrors.symptoms?.[0] || "Invalid input.",
+      symptoms: formData.get('symptoms') as string || '',
+      medicalHistory: formData.get('medicalHistory') as string || '',
     };
   }
 
   try {
     const result = await analyzeSymptomsAndSuggestConditions(validatedFields.data);
-    return { message: "Analysis complete", result, error: null };
+    return {
+        message: "Analysis complete", 
+        result, 
+        error: null,
+        symptoms: validatedFields.data.symptoms,
+        medicalHistory: validatedFields.data.medicalHistory || '',
+    };
   } catch (e) {
-    return { message: "Analysis failed", result: null, error: "An error occurred during analysis. Please try again." };
+    return { 
+        message: "Analysis failed", 
+        result: null, 
+        error: "An error occurred during analysis. Please try again.",
+        symptoms: validatedFields.data.symptoms,
+        medicalHistory: validatedFields.data.medicalHistory || '',
+    };
   }
 }

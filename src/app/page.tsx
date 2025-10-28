@@ -1,25 +1,42 @@
 'use client';
 
-import { useState } from 'react';
 import { Header } from '@/components/header';
 import { LandingPage } from '@/components/landing-page';
 import { SymptoScanDashboard } from '@/components/sympto-scan-dashboard';
+import { useUser, useAuth } from '@/firebase';
+import { initiateAnonymousSignIn } from '@/firebase/non-blocking-login';
+import { signOut } from 'firebase/auth';
+import { Loader } from 'lucide-react';
 
 export default function Home() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { user, isUserLoading } = useUser();
+  const auth = useAuth();
 
-  const handleLoginToggle = () => {
-    setIsLoggedIn(!isLoggedIn);
+  const handleLogin = () => {
+    initiateAnonymousSignIn(auth);
   };
+
+  const handleLogout = () => {
+    signOut(auth);
+  };
+
+  if (isUserLoading) {
+    return (
+       <div className="flex items-center justify-center min-h-screen flex-col gap-4">
+        <Loader className="w-12 h-12 animate-spin text-primary" />
+        <p className="text-muted-foreground">Loading SymptoScan...</p>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col min-h-screen">
-      <Header isLoggedIn={isLoggedIn} onLoginToggle={handleLoginToggle} />
+      <Header isLoggedIn={!!user} onLogin={handleLogin} onLogout={handleLogout} />
       <main className="flex-1">
-        {isLoggedIn ? (
+        {user ? (
           <SymptoScanDashboard />
         ) : (
-          <LandingPage onGetStarted={() => setIsLoggedIn(true)} />
+          <LandingPage onGetStarted={handleLogin} />
         )}
       </main>
       <footer className="py-6 px-4 md:px-8 border-t">
