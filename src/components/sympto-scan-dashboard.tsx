@@ -5,10 +5,11 @@ import { SymptomAnalyzer } from './symptom-analyzer';
 import { AnalysisResults } from './analysis-results';
 import { DoctorRecommendations } from './doctor-recommendations';
 import { MapView } from './map-view';
-import type { AnalysisResult } from '@/lib/types';
+import type { AnalysisResult, Doctor } from '@/lib/types';
 
 export function SymptoScanDashboard() {
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
+  const [doctors, setDoctors] = useState<Doctor[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -29,8 +30,12 @@ export function SymptoScanDashboard() {
           <AnalysisResults analysis={analysisResult} isLoading={isLoading} error={error} />
           { (analysisResult || isLoading) && (
               <>
-                <DoctorRecommendations analysis={analysisResult} />
-                <MapView />
+                <DoctorRecommendations 
+                  analysis={analysisResult} 
+                  onDoctorsFound={setDoctors} 
+                  isLoading={isLoading} 
+                />
+                <MapView doctors={doctors} />
               </>
           )}
         </div>
