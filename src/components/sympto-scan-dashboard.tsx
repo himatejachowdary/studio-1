@@ -7,12 +7,13 @@ import { DoctorRecommendations } from './doctor-recommendations';
 import { MapView } from './map-view';
 import type { AnalysisResult, Doctor } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Brain, DatabaseZap, Save } from 'lucide-react';
+import { Brain, DatabaseZap, Save, History } from 'lucide-react';
 import { useUser, useFirestore } from '@/firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, serverTimestamp } from 'firebase/firestore';
 import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 export function SymptoScanDashboard() {
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
@@ -91,14 +92,20 @@ export function SymptoScanDashboard() {
                 </p>
                 <ul className="list-disc list-inside space-y-2">
                     <li><strong>Secure Storage:</strong> We use Firestore to save each analysis under your account.</li>
-                    <li><strong>View History:</strong> In the future, you'll be able to view past symptom checks.</li>
+                    <li><strong>View History:</strong> You can view past symptom checks at any time.</li>
                     <li><strong>Data Privacy:</strong> All data is private to your account.</li>
                 </ul>
             </CardContent>
-            <CardFooter>
+            <CardFooter className="flex-wrap gap-2">
                  <Button onClick={handleSaveAnalysis} disabled={!analysisResult || isLoading}>
                     <Save className="mr-2 h-4 w-4" />
                     Save Current Analysis
+                </Button>
+                <Button asChild variant="outline">
+                    <Link href="/history">
+                        <History className="mr-2 h-4 w-4" />
+                        View Full History
+                    </Link>
                 </Button>
             </CardFooter>
           </Card>

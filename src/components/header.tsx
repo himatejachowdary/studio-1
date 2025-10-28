@@ -1,5 +1,6 @@
-import { Stethoscope, User, LogIn, LogOut } from 'lucide-react';
+import { Stethoscope, User, LogIn, LogOut, History } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 type HeaderProps = {
   isLoggedIn: boolean;
@@ -11,22 +12,34 @@ export function Header({ isLoggedIn, onLogin, onLogout }: HeaderProps) {
   return (
     <header className="py-4 px-4 md:px-8 flex justify-between items-center bg-background/80 backdrop-blur-sm sticky top-0 z-40 border-b">
       <div className="flex items-center gap-3">
-        <Stethoscope className="text-primary h-8 w-8" />
-        <h1 className="text-2xl md:text-3xl font-headline font-bold text-foreground">
-          SymptoScan
-        </h1>
+        <Link href="/" className="flex items-center gap-3">
+          <Stethoscope className="text-primary h-8 w-8" />
+          <h1 className="text-2xl md:text-3xl font-headline font-bold text-foreground">
+            SymptoScan
+          </h1>
+        </Link>
       </div>
-      {isLoggedIn ? (
-         <Button onClick={onLogout} variant="outline" size="sm">
-          <LogOut className="mr-2 h-4 w-4" />
-          Log Out
-        </Button>
-      ) : (
-        <Button onClick={onLogin} variant="default" size="sm">
-          <LogIn className="mr-2 h-4 w-4" />
-          Log In / Sign Up
-        </Button>
-      )}
+      <div className="flex items-center gap-2">
+        {isLoggedIn ? (
+          <>
+            <Button asChild variant="ghost" size="sm">
+              <Link href="/history">
+                <History className="mr-2 h-4 w-4" />
+                View History
+              </Link>
+            </Button>
+            <Button onClick={onLogout} variant="outline" size="sm">
+              <LogOut className="mr-2 h-4 w-4" />
+              Log Out
+            </Button>
+          </>
+        ) : (
+          <Button onClick={onLogin} variant="default" size="sm">
+            <LogIn className="mr-2 h-4 w-4" />
+            Log In / Sign Up
+          </Button>
+        )}
+      </div>
     </header>
   );
 }
