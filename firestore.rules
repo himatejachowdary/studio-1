@@ -1,0 +1,125 @@
+/**
+ * @fileoverview Firestore Security Rules for SymptoScan.
+ *
+ * Core Philosophy: This ruleset enforces a strict user-ownership model. Each user can only access their own data,
+ * ensuring privacy and preventing unauthorized access.
+ *
+ * Data Structure: All data is nested under /users/{userId}, with subcollections for userProfiles, medicalHistories,
+ * and diagnoses. This hierarchical structure simplifies authorization and improves query performance.
+ *
+ * Key Security Decisions:
+ * - User listing is disallowed to prevent potential information leaks.
+ * - The rules explicitly deny any write operations that attempt to violate the user-ownership model.
+ * - Data validation is limited to relational integrity (ownership checks). Data shape is not strictly enforced to
+ *   allow for rapid prototyping.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * @description Enforces user-ownership for UserProfile documents. Only the authenticated user can create, read, update, or delete their own profile.
+     * @path /users/{userId}/userProfiles/{userProfileId}
+     * @allow (create) - Authenticated user creates their own profile with matching userId and userProfileId.
+     *   Example: User A (UID: user_abc) creates a profile at /users/user_abc/userProfiles/profile_123 with data { id: "user_abc" }.
+     * @allow (get, list) - Authenticated user reads their own profile.
+     *   Example: User A (UID: user_abc) reads their profile at /users/user_abc/userProfiles/profile_123.
+     * @allow (update, delete) - Authenticated user updates/deletes their own profile.
+     *   Example: User A (UID: user_abc) updates their profile at /users/user_abc/userProfiles/profile_123.
+     * @deny (create) - Authenticated user attempts to create a profile under another user's ID.
+     *   Example: User A (UID: user_abc) attempts to create a profile at /users/user_def/userProfiles/profile_123.
+     * @deny (update, delete) - Authenticated user attempts to update/delete another user's profile.
+     *   Example: User A (UID: user_abc) attempts to update the profile at /users/user_def/userProfiles/profile_123.
+     * @principle Enforces document ownership for all operations.
+     */
+    match /users/{userId}/userProfiles/{userProfileId} {
+      function isSignedIn() {
+        return request.auth != null;
+      }
+
+      function isOwner(userId) {
+        return request.auth.uid == userId;
+      }
+
+      function isExistingOwner(userId) {
+        return isOwner(userId) && resource != null;
+      }
+
+      allow get: if isSignedIn() && isOwner(userId);
+      allow list: if isSignedIn() && isOwner(userId);
+      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isSignedIn() && isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isSignedIn() && isExistingOwner(userId);
+    }
+
+    /**
+     * @description Enforces user-ownership for MedicalHistory documents. Only the authenticated user can create, read, update, or delete their own medical history.
+     * @path /users/{userId}/medicalHistories/{medicalHistoryId}
+     * @allow (create) - Authenticated user creates their own medical history with matching userId and medicalHistoryId.
+     *   Example: User A (UID: user_abc) creates a history at /users/user_abc/medicalHistories/history_123 with data { id: "user_abc" }.
+     * @allow (get, list) - Authenticated user reads their own medical history.
+     *   Example: User A (UID: user_abc) reads their history at /users/user_abc/medicalHistories/history_123.
+     * @allow (update, delete) - Authenticated user updates/deletes their own medical history.
+     *   Example: User A (UID: user_abc) updates their history at /users/user_abc/medicalHistories/history_123.
+     * @deny (create) - Authenticated user attempts to create a medical history under another user's ID.
+     *   Example: User A (UID: user_abc) attempts to create a history at /users/user_def/medicalHistories/history_123.
+     * @deny (update, delete) - Authenticated user attempts to update/delete another user's medical history.
+     *   Example: User A (UID: user_abc) attempts to update the history at /users/user_def/medicalHistories/history_123.
+     * @principle Enforces document ownership for all operations.
+     */
+    match /users/{userId}/medicalHistories/{medicalHistoryId} {
+      function isSignedIn() {
+        return request.auth != null;
+      }
+
+      function isOwner(userId) {
+        return request.auth.uid == userId;
+      }
+
+      function isExistingOwner(userId) {
+        return isOwner(userId) && resource != null;
+      }
+
+      allow get: if isSignedIn() && isOwner(userId);
+      allow list: if isSignedIn() && isOwner(userId);
+      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isSignedIn() && isExistingOwner(userId) && request.resource.data.id == resource.data.id;
+      allow delete: if isSignedIn() && isExistingOwner(userId);
+    }
+
+    /**
+     * @description Enforces user-ownership for Diagnosis documents. Only the authenticated user can create, read, update, or delete their own diagnoses.
+     * @path /users/{userId}/diagnoses/{diagnosisId}
+     * @allow (create) - Authenticated user creates their own diagnosis with matching userId and diagnosisId.
+     *   Example: User A (UID: user_abc) creates a diagnosis at /users/user_abc/diagnoses/diagnosis_123 with data { userProfileId: "user_abc" }.
+     * @allow (get, list) - Authenticated user reads their own diagnosis.
+     *   Example: User A (UID: user_abc) reads their diagnosis at /users/user_abc/diagnoses/diagnosis_123.
+     * @allow (update, delete) - Authenticated user updates/deletes their own diagnosis.
+     *   Example: User A (UID: user_abc) updates their diagnosis at /users/user_abc/diagnoses/diagnosis_123.
+     * @deny (create) - Authenticated user attempts to create a diagnosis under another user's ID.
+     *   Example: User A (UID: user_abc) attempts to create a diagnosis at /users/user_def/diagnoses/diagnosis_123.
+     * @deny (update, delete) - Authenticated user attempts to update/delete another user's diagnosis.
+     *   Example: User A (UID: user_abc) attempts to update the diagnosis at /users/user_def/diagnoses/diagnosis_123.
+     * @principle Enforces document ownership for all operations.
+     */
+    match /users/{userId}/diagnoses/{diagnosisId} {
+      function isSignedIn() {
+        return request.auth != null;
+      }
+
+      function isOwner(userId) {
+        return request.auth.uid == userId;
+      }
+
+      function isExistingOwner(userId) {
+        return isOwner(userId) && resource != null;
+      }
+
+      allow get: if isSignedIn() && isOwner(userId);
+      allow list: if isSignedIn() && isOwner(userId);
+      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.userProfileId == userId;
+      allow update: if isSignedIn() && isExistingOwner(userId) && request.resource.data.userProfileId == resource.data.userProfileId;
+      allow delete: if isSignedIn() && isExistingOwner(userId);
+    }
+  }
+}
