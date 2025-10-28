@@ -9,13 +9,25 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { useEffect, useRef } from 'react';
 import type { AnalysisResult } from '@/lib/types';
-import { FileText, Bot } from 'lucide-react';
+import { FileText, Bot, Siren } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 type SymptomAnalyzerProps = {
   onAnalysisUpdate: (result: AnalysisResult | null) => void;
   onLoadingChange: (isLoading: boolean) => void;
   onErrorChange: (error: string | null) => void;
+  onSos: () => void;
 };
 
 function SubmitButton() {
@@ -37,7 +49,7 @@ function SubmitButton() {
     );
 }
 
-export function SymptomAnalyzer({ onAnalysisUpdate, onLoadingChange, onErrorChange }: SymptomAnalyzerProps) {
+export function SymptomAnalyzer({ onAnalysisUpdate, onLoadingChange, onErrorChange, onSos }: SymptomAnalyzerProps) {
   const initialState = { message: '', result: null, error: null };
   const [state, formAction] = useFormState(getAnalysis, initialState);
   const { pending } = useFormStatus();
@@ -84,13 +96,37 @@ export function SymptomAnalyzer({ onAnalysisUpdate, onLoadingChange, onErrorChan
       <style>{spinnerStyle}</style>
       <Card>
         <CardHeader>
-          <CardTitle className="font-headline flex items-center gap-2">
-            <FileText className="w-6 h-6 text-primary" />
-            Symptom Checker
-          </CardTitle>
-          <CardDescription>
-            Describe your symptoms in plain language, and our AI will provide a preliminary analysis.
-          </CardDescription>
+          <div className="flex justify-between items-start">
+            <div>
+              <CardTitle className="font-headline flex items-center gap-2">
+                <FileText className="w-6 h-6 text-primary" />
+                Symptom Checker
+              </CardTitle>
+              <CardDescription>
+                Describe your symptoms in plain language for a preliminary analysis.
+              </CardDescription>
+            </div>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" size="sm" className="flex-shrink-0">
+                  <Siren className="mr-2" />
+                  SOS
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Emergency Assistance</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This will find the nearest hospitals and provide the emergency service number (108). Do you want to proceed?
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={onSos}>Proceed</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         </CardHeader>
         <form action={formAction} ref={formRef}>
           <CardContent className="space-y-6">

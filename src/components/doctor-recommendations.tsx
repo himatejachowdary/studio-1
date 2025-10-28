@@ -1,7 +1,7 @@
 'use client';
 
-import { Building, MapPin, User, ShieldCheck, Loader } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Building, MapPin, User, ShieldCheck, Loader, Phone } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import type { Doctor, AnalysisResult } from '@/lib/types';
 import { useEffect, useState } from 'react';
@@ -18,13 +18,15 @@ export function DoctorRecommendations({ analysis, onDoctorsFound, isLoading: ana
   const [isFetching, setIsFetching] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const isSos = analysis?.possibleConditions === 'Emergency Care';
+
   useEffect(() => {
     if (analysis && analysis.possibleConditions) {
       const fetchDoctors = async (latitude: number, longitude: number) => {
         setIsFetching(true);
         setError(null);
         try {
-          const specialty = analysis.possibleConditions.split(',')[0].trim();
+          const specialty = isSos ? "hospital" : analysis.possibleConditions.split(',')[0].trim();
           const result = await findNearbyDoctors({ latitude, longitude, specialty });
           setDoctors(result.doctors);
           onDoctorsFound(result.doctors);
@@ -51,7 +53,7 @@ export function DoctorRecommendations({ analysis, onDoctorsFound, isLoading: ana
         setDoctors(null);
         onDoctorsFound(null);
     }
-  }, [analysis, onDoctorsFound]);
+  }, [analysis, onDoctorsFound, isSos]);
 
   const renderContent = () => {
     if (analysisLoading) {
@@ -67,7 +69,7 @@ export function DoctorRecommendations({ analysis, onDoctorsFound, isLoading: ana
       return (
         <div className="flex items-center justify-center p-8 text-muted-foreground">
           <Loader className="w-6 h-6 animate-spin mr-2" />
-          <span>Finding nearby doctors...</span>
+          <span>Finding nearby {isSos ? 'hospitals' : 'doctors'}...</span>
         </div>
       );
     }
@@ -90,7 +92,7 @@ export function DoctorRecommendations({ analysis, onDoctorsFound, isLoading: ana
     }
 
     if (!doctors || doctors.length === 0) {
-      return <p className="text-muted-foreground p-4">No doctors found for the given criteria.</p>;
+      return <p className="text-muted-foreground p-4">No {isSos ? 'hospitals' : 'doctors'} found for the given criteria.</p>;
     }
     
     return (
@@ -119,8 +121,8 @@ export function DoctorRecommendations({ analysis, onDoctorsFound, isLoading: ana
     );
   };
   
-  const cardTitle = analysis ? 'Recommended Doctors' : 'Doctor Suggestions';
-  const cardDescription = analysis ? `Based on your analysis for: ${analysis.possibleConditions.split(',')[0]}` : undefined;
+  const cardTitle = isSos ? 'Nearby Hospitals' : analysis ? 'Recommended Doctors' : 'Doctor Suggestions';
+  const cardDescription = isSos ? 'Emergency services near you' : analysis ? `Based on your analysis for: ${analysis.possibleConditions.split(',')[0]}` : undefined;
 
   return (
     <Card className="h-full flex flex-col">
@@ -137,8 +139,15 @@ export function DoctorRecommendations({ analysis, onDoctorsFound, isLoading: ana
         {renderContent()}
       </CardContent>
        {doctors && doctors.length > 0 &&
-        <CardFooter>
-          <Button className="w-full" variant="outline">View all doctors</Button>
+        <CardFooter className="flex-col items-stretch gap-2">
+          {isSos && 
+            <Button className="w-full" variant="destructive" asChild>
+                <a href="tel:108">
+                    <Phone className="mr-2" /> Call Emergency Services (108)
+                </a>
+            </Button>
+          }
+          <Button className="w-full" variant="outline">View all {isSos ? 'hospitals' : 'doctors'}</Button>
         </CardFooter>
       }
     </Card>
