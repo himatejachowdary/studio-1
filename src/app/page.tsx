@@ -4,7 +4,6 @@ import { Header } from '@/components/header';
 import { LandingPage } from '@/components/landing-page';
 import { SymptoScanDashboard } from '@/components/sympto-scan-dashboard';
 import { useUser, useAuth } from '@/firebase';
-import { initiateAnonymousSignIn } from '@/firebase/auth';
 import { signOut } from 'firebase/auth';
 import { Loader } from 'lucide-react';
 import { useState } from 'react';

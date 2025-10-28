@@ -1,17 +1,9 @@
 'use client';
 import {
-  Auth, 
-  signInAnonymously,
+  Auth,
   isSignInWithEmailLink,
   signInWithEmailLink,
 } from 'firebase/auth';
-
-/** Initiate anonymous sign-in (non-blocking). */
-export function initiateAnonymousSignIn(authInstance: Auth): void {
-  signInAnonymously(authInstance).catch(error => {
-    console.error("Anonymous sign-in failed", error);
-  });
-}
 
 /** Handles the email link sign-in process. */
 export function handleSignInWithEmailLink(auth: Auth, onAuthSuccess: () => void) {
