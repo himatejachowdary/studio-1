@@ -6,8 +6,8 @@ import { AnalysisResults } from './analysis-results';
 import { DoctorRecommendations } from './doctor-recommendations';
 import { MapView } from './map-view';
 import type { AnalysisResult, Doctor } from '@/lib/types';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Brain, DatabaseZap, Save, History } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { Brain, DatabaseZap, Save, History, User } from 'lucide-react';
 import { useUser, useFirestore } from '@/firebase';
 import { collection, serverTimestamp } from 'firebase/firestore';
 import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
@@ -55,6 +55,11 @@ export function SymptoScanDashboard() {
     toast({
       title: "Analysis Saved",
       description: "Your symptom analysis has been saved to your history.",
+      action: (
+        <Button asChild variant="secondary" size="sm">
+            <Link href="/history">View History</Link>
+        </Button>
+      )
     });
   };
 
@@ -66,13 +71,23 @@ export function SymptoScanDashboard() {
     const emergencyAnalysis: AnalysisResult = {
       possibleConditions: 'Emergency Care',
       confidenceLevel: 'High',
-      nextSteps: 'Seek immediate medical attention.',
+      nextSteps: 'Seek immediate medical attention. We are locating the nearest hospitals for you.',
     };
     setAnalysisResult(emergencyAnalysis);
+    setSymptomData({symptoms: "Emergency situation triggered by user."});
   };
+
+  const userIdentifier = user?.email || user?.phoneNumber || "Welcome";
 
   return (
     <div className="container mx-auto max-w-7xl px-4 py-8">
+       <div className="mb-8">
+            <h1 className="text-3xl md:text-4xl font-bold font-headline">SymptoScan Dashboard</h1>
+            <p className="text-muted-foreground flex items-center gap-2">
+                <User className="w-4 h-4"/> 
+                Signed in as: <span className="font-medium">{userIdentifier}</span>
+            </p>
+        </div>
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
         <div className="lg:col-span-2 flex flex-col gap-8">
           <SymptomAnalyzer
@@ -82,28 +97,32 @@ export function SymptoScanDashboard() {
             onSos={handleSosSearch}
           />
            <Card>
-            <CardHeader className="flex flex-row items-center gap-2">
-              <DatabaseZap className="w-6 h-6 text-primary" />
-              <CardTitle className="font-headline">Your Medical History</CardTitle>
+            <CardHeader>
+                <div className="flex items-center gap-3">
+                    <DatabaseZap className="w-8 h-8 text-primary" />
+                    <div>
+                        <CardTitle className="font-headline">Your Medical Record</CardTitle>
+                        <CardDescription>Securely save and view your analysis history.</CardDescription>
+                    </div>
+                </div>
             </CardHeader>
-            <CardContent className="space-y-4 text-sm text-muted-foreground">
+            <CardContent className="space-y-2 text-sm text-muted-foreground">
                 <p>
-                    Your symptom analyses can be securely stored in your personal health record.
+                    Your symptom analyses can be securely stored in your personal health record using Firestore.
                 </p>
-                <ul className="list-disc list-inside space-y-2">
-                    <li><strong>Secure Storage:</strong> We use Firestore to save each analysis under your account.</li>
-                    <li><strong>View History:</strong> You can view past symptom checks at any time.</li>
-                    <li><strong>Data Privacy:</strong> All data is private to your account.</li>
+                <ul className="list-disc list-inside space-y-1 text-xs">
+                    <li><strong>Secure Storage:</strong> Each analysis is saved under your private user account.</li>
+                    <li><strong>View History:</strong> Access past checks anytime from the history page.</li>
                 </ul>
             </CardContent>
             <CardFooter className="flex-wrap gap-2">
                  <Button onClick={handleSaveAnalysis} disabled={!analysisResult || isLoading}>
-                    <Save className="mr-2 h-4 w-4" />
+                    <Save />
                     Save Current Analysis
                 </Button>
                 <Button asChild variant="outline">
                     <Link href="/history">
-                        <History className="mr-2 h-4 w-4" />
+                        <History />
                         View Full History
                     </Link>
                 </Button>
