@@ -28,6 +28,12 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'apis.mappls.com',
+        port: '',
+        pathname: '/**',
+      }
     ],
   },
 };

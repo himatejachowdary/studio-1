@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { SymptomAnalyzer } from './symptom-analyzer';
 import { AnalysisResults } from './analysis-results';
 import { DoctorRecommendations } from './doctor-recommendations';
-import { MapPlaceholder } from './map-placeholder';
+import { MapView } from './map-view';
 import type { AnalysisResult } from '@/lib/types';
 
 export function SymptoScanDashboard() {
@@ -30,7 +30,7 @@ export function SymptoScanDashboard() {
           { (analysisResult || isLoading) && (
               <>
                 <DoctorRecommendations analysis={analysisResult} />
-                <MapPlaceholder />
+                <MapView />
               </>
           )}
         </div>
