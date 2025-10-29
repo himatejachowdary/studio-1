@@ -12,7 +12,8 @@ import { useAuth } from '@/firebase';
 import { 
   createUserWithEmailAndPassword,
   signInWithPopup,
-  GoogleAuthProvider
+  GoogleAuthProvider,
+  sendEmailVerification
 } from 'firebase/auth';
 import { Loader, Mail, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -69,8 +70,9 @@ export default function SignupPage() {
     setIsLoading(true);
     setError(null);
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      toast({ title: 'Success!', description: 'Your account has been created.' });
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      await sendEmailVerification(userCredential.user);
+      toast({ title: 'Success!', description: 'Your account has been created. A verification email has been sent.' });
       router.push('/');
     } catch (err: any) {
       let friendlyMessage = 'An authentication error occurred. Please try again.';
