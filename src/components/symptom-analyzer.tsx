@@ -32,11 +32,21 @@ type SymptomAnalyzerProps = {
 
 function SubmitButton({ isUserLoggedIn }: { isUserLoggedIn: boolean }) {
     const { pending } = useFormStatus();
+
+    useEffect(() => {
+      // This is a workaround until a better solution for pending state is available
+      // from useActionState. We use a data attribute on the form.
+      const form = document.querySelector('form[data-form-id="symptom-analyzer-form"]');
+      if (form) {
+        form.setAttribute('data-pending', pending.toString());
+      }
+    }, [pending]);
+    
     return (
         <Button type="submit" className="w-full" disabled={pending || !isUserLoggedIn}>
             {pending ? (
                 <>
-                    <span className="spinner-sm mr-2" />
+                    <Bot className="mr-2 h-4 w-4 animate-spin" />
                     Analyzing...
                 </>
             ) : (
@@ -56,10 +66,24 @@ export function SymptomAnalyzer({ onAnalysisUpdate, onLoadingChange, onErrorChan
   const { toast } = useToast();
 
   useEffect(() => {
-      const { pending } = formRef.current?.dataset ?? {};
-      onLoadingChange(pending === 'true');
-  }, [onLoadingChange, state]);
+    // Listen for form submission state changes
+    const form = formRef.current;
+    if (!form) return;
 
+    const observer = new MutationObserver((mutations) => {
+        for(let mutation of mutations) {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'data-pending') {
+                const isPending = form.getAttribute('data-pending') === 'true';
+                onLoadingChange(isPending);
+            }
+        }
+    });
+
+    observer.observe(form, { attributes: true });
+
+    return () => observer.disconnect();
+
+  }, [onLoadingChange]);
 
   useEffect(() => {
     if (state.error) {
@@ -81,44 +105,9 @@ export function SymptomAnalyzer({ onAnalysisUpdate, onLoadingChange, onErrorChan
     }
   }, [state, onAnalysisUpdate, onErrorChange, toast]);
   
-  useEffect(() => {
-    // This is a workaround to get pending state from useActionState
-    // which is not yet available.
-    const form = formRef.current;
-    if (!form) return;
-
-    const handler = (e: Event) => {
-        const { pending } = (e as unknown as {target: HTMLFormElement}).target.dataset;
-        onLoadingChange(pending === 'true');
-    }
-    
-    form.addEventListener('submit', handler);
-    form.addEventListener('DOMSubtreeModified', handler);
-    
-    return () => {
-        form.removeEventListener('submit', handler);
-        form.removeEventListener('DOMSubtreeModified', handler);
-    }
-  }, [onLoadingChange]);
-
-  const spinnerStyle = `
-    .spinner-sm {
-      width: 1rem;
-      height: 1rem;
-      border: 2px solid currentColor;
-      border-right-color: transparent;
-      border-radius: 50%;
-      display: inline-block;
-      animation: spinner-border .75s linear infinite;
-    }
-    @keyframes spinner-border {
-      to { transform: rotate(360deg); }
-    }
-  `;
 
   return (
     <>
-      <style>{spinnerStyle}</style>
       <Card>
         <CardHeader>
           <div className="flex justify-between items-start">
@@ -153,7 +142,7 @@ export function SymptomAnalyzer({ onAnalysisUpdate, onLoadingChange, onErrorChan
             </AlertDialog>
           </div>
         </CardHeader>
-        <form action={formAction} ref={formRef}>
+        <form action={formAction} ref={formRef} data-form-id="symptom-analyzer-form">
           <CardContent className="space-y-6">
             <div className="space-y-2">
               <Label htmlFor="symptoms">Describe your symptoms</Label>
