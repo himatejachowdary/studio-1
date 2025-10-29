@@ -9,8 +9,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/firebase';
 import { sendSignInLinkToEmail } from 'firebase/auth';
-import { Loader, Mail, CheckCircle } from 'lucide-react';
+import { Loader, Mail, CheckCircle, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const emailSchema = z.object({
   email: z.string().email('Please enter a valid email address.'),
@@ -23,17 +24,20 @@ export function EmailAuthForm({ onAuthSuccess }: { onAuthSuccess: () => void }) 
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [isEmailSent, setIsEmailSent] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const {
     register,
     handleSubmit,
     formState: { errors },
+    getValues
   } = useForm<EmailFormValues>({
     resolver: zodResolver(emailSchema),
   });
 
   const handleEmailSubmit = async ({ email }: EmailFormValues) => {
     setIsLoading(true);
+    setError(null);
     const actionCodeSettings = {
       // URL you want to redirect back to. The domain (www.example.com) for this
       // URL must be in the authorized domains list in the Firebase Console.
@@ -48,16 +52,8 @@ export function EmailAuthForm({ onAuthSuccess }: { onAuthSuccess: () => void }) 
       // if they open the link on the same device.
       window.localStorage.setItem('emailForSignIn', email);
       setIsEmailSent(true);
-      toast({
-        title: 'Check Your Email',
-        description: `A sign-in link has been sent to ${email}.`,
-      });
-    } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Authentication Error',
-        description: error.message || 'Failed to send sign-in link. Please try again.',
-      });
+    } catch (err: any) {
+      setError(err.message || 'Failed to send sign-in link. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -65,31 +61,43 @@ export function EmailAuthForm({ onAuthSuccess }: { onAuthSuccess: () => void }) 
 
   if (isEmailSent) {
     return (
-      <div className="text-center p-4 space-y-4">
-        <CheckCircle className="mx-auto h-12 w-12 text-green-500" />
-        <h3 className="font-semibold">Email Sent</h3>
+      <div className="text-center p-4 space-y-4 rounded-lg bg-secondary/50">
+        <Mail className="mx-auto h-12 w-12 text-primary" />
+        <h3 className="font-semibold text-lg">Check Your Email</h3>
         <p className="text-sm text-muted-foreground">
-          Please check your inbox and click the link in the email to complete your sign-in.
+          A secure sign-in link has been sent to <span className="font-bold text-foreground">{getValues('email')}</span>. Click the link to log in.
         </p>
+         <Button variant="link" size="sm" onClick={() => setIsEmailSent(false)} className="w-full">
+            Use a different email
+        </Button>
       </div>
     );
   }
 
   return (
     <form onSubmit={handleSubmit(handleEmailSubmit)} className="space-y-4">
+        {error && (
+         <Alert variant="destructive">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertTitle>Authentication Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+         </Alert>
+       )}
       <div className="space-y-2">
         <Label htmlFor="email">Email Address</Label>
         <Input
           id="email"
+          type="email"
           placeholder="name@example.com"
           {...register('email')}
+          disabled={isLoading}
         />
         {errors.email && (
           <p className="text-sm text-destructive">{errors.email.message}</p>
         )}
       </div>
       <Button type="submit" className="w-full" disabled={isLoading}>
-        {isLoading ? <Loader className="animate-spin" /> : <Mail className="mr-2" />}
+        {isLoading ? <Loader className="animate-spin" /> : <Mail />}
         Send Sign-In Link
       </Button>
     </form>
