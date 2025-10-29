@@ -14,6 +14,7 @@ import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { Skeleton } from './ui/skeleton';
 
 export function SymptoScanDashboard() {
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
@@ -23,7 +24,7 @@ export function SymptoScanDashboard() {
   const [symptomData, setSymptomData] = useState<{symptoms: string, medicalHistory?: string} | null>(null);
 
 
-  const { user } = useUser();
+  const { user, isUserLoading } = useUser();
   const firestore = useFirestore();
   const { toast } = useToast();
 
@@ -83,10 +84,14 @@ export function SymptoScanDashboard() {
     <div className="container mx-auto max-w-7xl px-4 py-8">
        <div className="mb-8">
             <h1 className="text-3xl md:text-4xl font-bold font-headline">SymptoScan Dashboard</h1>
-            <p className="text-muted-foreground flex items-center gap-2">
+            <div className="text-muted-foreground flex items-center gap-2">
                 <User className="w-4 h-4"/> 
-                Signed in as: <span className="font-medium">{userIdentifier}</span>
-            </p>
+                {isUserLoading ? (
+                  <Skeleton className="h-4 w-48" />
+                ) : (
+                  <p>Signed in as: <span className="font-medium">{userIdentifier}</span></p>
+                )}
+            </div>
         </div>
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 items-start">
         <div className="lg:col-span-2 flex flex-col gap-8">
