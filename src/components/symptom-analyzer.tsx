@@ -1,6 +1,6 @@
 'use client';
 
-import { useFormState, useFormStatus } from 'react-dom';
+import { useActionState, useFormStatus } from 'react';
 import { getAnalysis } from '@/lib/actions';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -51,7 +51,7 @@ function SubmitButton() {
 
 export function SymptomAnalyzer({ onAnalysisUpdate, onLoadingChange, onErrorChange, onSos }: SymptomAnalyzerProps) {
   const initialState = { message: '', result: null, error: null, symptoms: '', medicalHistory: '' };
-  const [state, formAction] = useFormState(getAnalysis, initialState);
+  const [state, formAction] = useActionState(getAnalysis, initialState);
   const { pending } = useFormStatus();
   const formRef = useRef<HTMLFormElement>(null);
   const { toast } = useToast();
