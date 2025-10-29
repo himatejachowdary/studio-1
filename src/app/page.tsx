@@ -6,19 +6,15 @@ import { SymptoScanDashboard } from '@/components/sympto-scan-dashboard';
 import { useUser, useAuth } from '@/firebase';
 import { signOut } from 'firebase/auth';
 import { Loader } from 'lucide-react';
-import { useState } from 'react';
-import { LoginDialog } from '@/components/login-dialog';
-
+import { useRouter } from 'next/navigation';
 
 export default function Home() {
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
-  const [isLoginDialogOpen, setLoginDialogOpen] = useState(false);
+  const router = useRouter();
 
   const handleLogin = () => {
-    if (!user) {
-      setLoginDialogOpen(true);
-    }
+    router.push('/login');
   };
 
   const handleLogout = () => {
@@ -27,9 +23,9 @@ export default function Home() {
   
   const handleGetStarted = () => {
     if (user) {
-      // If user is already logged in, maybe scroll to dashboard or something
+      // If user is already logged in, they will see the dashboard.
     } else {
-      setLoginDialogOpen(true);
+      router.push('/signup');
     }
   };
 
@@ -60,7 +56,6 @@ export default function Home() {
           </div>
         </footer>
       </div>
-      <LoginDialog isOpen={isLoginDialogOpen} onOpenChange={setLoginDialogOpen} />
     </>
   );
 }

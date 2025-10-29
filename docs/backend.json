@@ -70,7 +70,8 @@
     "providers": [
       "anonymous",
       "email",
-      "phone"
+      "phone",
+      "google"
     ]
   },
   "firestore": {
