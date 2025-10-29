@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { useAuth } from '@/firebase';
 import { 
   signInWithEmailAndPassword,
-  signInWithPopup,
+  signInWithRedirect,
   GoogleAuthProvider
 } from 'firebase/auth';
 import { Loader, Mail, AlertTriangle } from 'lucide-react';
@@ -85,20 +85,15 @@ export default function LoginPage() {
     setError(null);
     try {
       const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-      toast({ title: 'Success!', description: 'You have been signed in with Google.' });
-      router.push('/');
+      await signInWithRedirect(auth, provider);
     } catch (err: any) {
         console.error("Google Sign-In Error:", err);
         let friendlyMessage = 'An error occurred during Google Sign-In. Please try again.';
         if (err.code === 'auth/account-exists-with-different-credential') {
             friendlyMessage = 'An account already exists with this email address. Please sign in with the original method.'
-        } else if (err.code === 'auth/popup-closed-by-user') {
-            friendlyMessage = 'Google Sign-In was cancelled.';
         }
        setError(friendlyMessage);
-    } finally {
-        setGoogleLoading(false);
+       setGoogleLoading(false);
     }
   };
 

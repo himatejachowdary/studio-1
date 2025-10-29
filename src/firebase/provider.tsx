@@ -1,12 +1,14 @@
+
 'use client';
 
 import React, { DependencyList, createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
 import { FirebaseApp } from 'firebase/app';
 import { Firestore } from 'firebase/firestore';
-import { Auth, User, onAuthStateChanged } from 'firebase/auth';
+import { Auth, User, onAuthStateChanged, getRedirectResult, GoogleAuthProvider } from 'firebase/auth';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 import { handleSignInWithEmailLink } from './auth';
 import { useToast } from '@/hooks/use-toast';
+import { useRouter } from 'next/navigation';
 
 interface FirebaseProviderProps {
   children: ReactNode;
@@ -69,6 +71,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
     userError: null,
   });
   const { toast } = useToast();
+  const router = useRouter();
 
 
   // Effect to subscribe to Firebase auth state changes
@@ -81,7 +84,32 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
     // Check for sign-in with email link
     handleSignInWithEmailLink(auth, () => {
         toast({ title: 'Success!', description: 'You have been logged in.' });
+        router.push('/');
     });
+
+    // Check for redirect result from Google Sign-In
+    getRedirectResult(auth)
+      .then((result) => {
+        if (result) {
+          // This is the signed-in user
+          const user = result.user;
+          // You can also get the Google Access Token if you need it.
+          const credential = GoogleAuthProvider.credentialFromResult(result);
+          const token = credential?.accessToken;
+          toast({ title: 'Success!', description: 'You have been signed in with Google.' });
+          router.push('/');
+        }
+      }).catch((error) => {
+        console.error("Google Sign-In Redirect Error:", error);
+        // Handle Errors here.
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        // The email of the user's account used.
+        const email = error.customData.email;
+        // The AuthCredential type that was used.
+        const credential = GoogleAuthProvider.credentialFromError(error);
+        toast({ variant: 'destructive', title: 'Sign-in Failed', description: errorMessage });
+      });
 
 
     setUserAuthState({ user: null, isUserLoading: true, userError: null }); // Reset on auth instance change
@@ -115,7 +143,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
       }
     );
     return () => unsubscribe(); // Cleanup
-  }, [auth, toast]); // Depends on the auth instance
+  }, [auth, toast, router]); // Depends on the auth instance
 
   // Memoize the context value
   const contextValue = useMemo((): FirebaseContextState => {
