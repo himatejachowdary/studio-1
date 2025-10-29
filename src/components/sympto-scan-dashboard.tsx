@@ -7,14 +7,16 @@ import { DoctorRecommendations } from './doctor-recommendations';
 import { MapView } from './map-view';
 import type { AnalysisResult, Doctor } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
-import { Brain, DatabaseZap, Save, History, User } from 'lucide-react';
+import { DatabaseZap, Save, History, User } from 'lucide-react';
 import { useUser, useFirestore } from '@/firebase';
-import { collection, serverTimestamp } from 'firebase/firestore';
-import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
+import { collection, serverTimestamp, addDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Skeleton } from './ui/skeleton';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
+
 
 export function SymptoScanDashboard() {
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
@@ -51,7 +53,16 @@ export function SymptoScanDashboard() {
     };
     
     const diagnosesColRef = collection(firestore, `users/${user.uid}/diagnoses`);
-    addDocumentNonBlocking(diagnosesColRef, diagnosisData);
+    
+    addDoc(diagnosesColRef, diagnosisData)
+      .catch(error => {
+        const permissionError = new FirestorePermissionError({
+          path: diagnosesColRef.path,
+          operation: 'create',
+          requestResourceData: diagnosisData,
+        });
+        errorEmitter.emit('permission-error', permissionError);
+      });
 
     toast({
       title: "Analysis Saved",
@@ -76,6 +87,7 @@ export function SymptoScanDashboard() {
     };
     setAnalysisResult(emergencyAnalysis);
     setSymptomData({symptoms: "Emergency situation triggered by user."});
+    setIsLoading(false);
   };
 
   const userIdentifier = user?.email || user?.phoneNumber || "Welcome";
@@ -120,7 +132,7 @@ export function SymptoScanDashboard() {
                     <li><strong>View History:</strong> Access past checks anytime from the history page.</li>
                 </ul>
             </CardContent>
-            <CardFooter className="flex-wrap gap-2">
+            <CardFooter className="flex flex-wrap gap-2">
                  <Button onClick={handleSaveAnalysis} disabled={!analysisResult || isLoading}>
                     <Save />
                     Save Current Analysis
