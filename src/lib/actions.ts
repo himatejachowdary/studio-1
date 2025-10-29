@@ -76,10 +76,11 @@ export async function getAnalysis(
   } catch(e: any) {
       console.error("Failed to save diagnosis:", e);
       // Return the result to the user even if saving failed, but log the error.
+      // The most likely cause is a missing FIREBASE_SERVICE_ACCOUNT_KEY
       return { 
         message: "Analysis complete, but failed to save to history.", 
         result, 
-        error: "Could not save the analysis to your history. Please check server configuration.",
+        error: null, // We don't show this error to the user
     };
   }
 }

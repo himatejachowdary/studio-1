@@ -43,9 +43,9 @@ export async function getAuthenticatedAppForUser() {
     return { app, currentUser: decodedToken, firestore };
   } catch (error) {
     console.error('Error in getAuthenticatedAppForUser:', error);
-    // Return a default state without an authenticated user or app, but DO NOT throw.
     // This allows parts of the app (like AI analysis) to function even if server auth is misconfigured.
-    return { app: null, currentUser: null, firestore: null };
+    // The error will be caught in the action, and the result will still be returned to the user.
+    throw error;
   }
 }
 

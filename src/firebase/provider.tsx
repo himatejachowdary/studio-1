@@ -109,8 +109,6 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
       });
 
 
-    setUserAuthState({ user: null, isUserLoading: true, userError: null }); // Reset on auth instance change
-
     const unsubscribe = onAuthStateChanged(
       auth,
       async (firebaseUser) => { // Auth state determined
