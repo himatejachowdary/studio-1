@@ -88,8 +88,29 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
 
     const unsubscribe = onAuthStateChanged(
       auth,
-      (firebaseUser) => { // Auth state determined
+      async (firebaseUser) => { // Auth state determined
         setUserAuthState({ user: firebaseUser, isUserLoading: false, userError: null });
+
+        if (firebaseUser) {
+          // ✅ Fetch the ID token
+          const idToken = await firebaseUser.getIdToken();
+          console.log("Firebase ID Token:", idToken);
+      
+          // ✅ Send token to your AWS API Gateway
+          fetch("https://your-api-gateway-url.execute-api.ap-south-1.amazonaws.com/prod/verify", {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${idToken}`,
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({ message: "hello from firebase client" })
+          })
+          .then(res => res.text())
+          .then(console.log)
+          .catch(console.error);
+        } else {
+          console.log("User not signed in yet");
+        }
       },
       (error) => { // Auth listener error
         console.error("FirebaseProvider: onAuthStateChanged error:", error);
