@@ -41,6 +41,14 @@ export function PhoneAuthForm({ onAuthSuccess }: { onAuthSuccess: () => void }) 
   const recaptchaVerifierRef = useRef<RecaptchaVerifier | null>(null);
   const recaptchaWrapperRef = useRef<HTMLDivElement>(null);
 
+  const phoneForm = useForm<PhoneFormValues>({
+    resolver: zodResolver(phoneSchema),
+  });
+
+  const otpForm = useForm<OtpFormValues>({
+    resolver: zodResolver(otpSchema),
+  });
+
 
   useEffect(() => {
     if (auth && !recaptchaVerifierRef.current && recaptchaWrapperRef.current) {
@@ -72,8 +80,8 @@ export function PhoneAuthForm({ onAuthSuccess }: { onAuthSuccess: () => void }) 
       console.error("Phone Auth Error:", err);
       setError(err.message || 'Failed to send verification code. Please try again.');
        // Reset reCAPTCHA on error
-       if (window.grecaptcha && recaptchaVerifierRef.current) {
-         window.grecaptcha.reset(recaptchaVerifierRef.current.widgetId);
+       if (typeof window !== 'undefined' && (window as any).grecaptcha && recaptchaVerifierRef.current) {
+         (window as any).grecaptcha.reset(recaptchaVerifierRef.current.widgetId);
        }
     } finally {
       setIsLoading(false);
