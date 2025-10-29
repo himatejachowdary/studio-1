@@ -95,20 +95,17 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
           const user = result.user;
           // You can also get the Google Access Token if you need it.
           const credential = GoogleAuthProvider.credentialFromResult(result);
-          const token = credential?.accessToken;
           toast({ title: 'Success!', description: 'You have been signed in with Google.' });
           router.push('/');
         }
       }).catch((error) => {
         console.error("Google Sign-In Redirect Error:", error);
         // Handle Errors here.
-        const errorCode = error.code;
-        const errorMessage = error.message;
-        // The email of the user's account used.
-        const email = error.customData.email;
-        // The AuthCredential type that was used.
-        const credential = GoogleAuthProvider.credentialFromError(error);
-        toast({ variant: 'destructive', title: 'Sign-in Failed', description: errorMessage });
+        let friendlyMessage = 'An error occurred during Google Sign-In. Please try again.';
+        if (error.code === 'auth/account-exists-with-different-credential') {
+            friendlyMessage = 'An account already exists with this email. Please sign in using the original method.'
+        }
+        toast({ variant: 'destructive', title: 'Sign-in Failed', description: friendlyMessage });
       });
 
 
