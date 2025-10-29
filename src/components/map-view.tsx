@@ -1,17 +1,10 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { MapPin, Loader, AlertTriangle, Hospital } from 'lucide-react';
+import { MapPin, Loader, AlertTriangle } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import type { Doctor } from '@/lib/types';
-
-// Dynamically import mappls-web-maps to avoid SSR issues
-let mappls: any;
-if (typeof window !== 'undefined') {
-  import('mappls-web-maps').then(module => {
-    mappls = module;
-  });
-}
+import { APIProvider, Map, AdvancedMarker } from '@vis.gl/react-google-maps';
 
 type MapStatus = 'loading' | 'loaded' | 'error' | 'denied';
 
@@ -20,156 +13,85 @@ type Props = {
 }
 
 export function MapView({ doctors }: Props) {
-  const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<any>(null); // Use a ref to hold the map instance
   const [status, setStatus] = useState<MapStatus>('loading');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const markersRef = useRef<any[]>([]);
+  const [userPosition, setUserPosition] = useState<{ lat: number; lng: number } | null>(null);
+  const [center, setCenter] = useState({ lat: 28.6139, lng: 77.2090 }); // Default to Delhi
 
-  const MAPPPLS_API_KEY = process.env.NEXT_PUBLIC_MAPPPLS_API_KEY;
+  const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
 
   useEffect(() => {
     let isMounted = true;
 
-    function initializeMap(lat: number, lon: number) {
-      if (mapRef.current && !mapInstanceRef.current && mappls && isMounted) {
-        const mapObject = new mappls.Map(mapRef.current, {
-          center: [lat, lon],
-          zoom: 12,
-        });
-
-        mapObject.on('load', () => {
-          if (isMounted) {
-            mapInstanceRef.current = mapObject;
-            setStatus('loaded');
-            // Initial user location marker
-            new mappls.Marker({
-              map: mapObject,
-              position: { lat, lng: lon },
-              icon: {
-                html: `<div style="width: 20px; height: 20px; background-color: blue; border-radius: 50%; border: 2px solid white;"></div>`,
-                width: 24,
-                height: 24,
-              },
-            }).setPopupContent('Your Location');
-          }
-        });
-      }
-    }
-
-    if (!MAPPPLS_API_KEY) {
+    if (!GOOGLE_MAPS_API_KEY) {
       setStatus('error');
-      setErrorMessage("Mappls API key is missing. Please add it to your .env file.");
+      setErrorMessage("Google Maps API key is missing. Please add NEXT_PUBLIC_GOOGLE_MAPS_API_KEY to your .env.local file.");
       return;
     }
-
-    const loadMap = () => {
-      if (!mappls) {
-        // Library is still loading, retry
-        setTimeout(loadMap, 200);
-        return;
-      }
     
-      if ('geolocation' in navigator) {
-        navigator.geolocation.getCurrentPosition(
-          (position) => {
-            if (isMounted) {
-              const { latitude, longitude } = position.coords;
-              initializeMap(latitude, longitude);
-            }
-          },
-          (error) => {
-            if (isMounted) {
-              if (error.code === error.PERMISSION_DENIED) {
-                setStatus('denied');
-              } else {
-                setStatus('error');
-                setErrorMessage('Could not retrieve your location. Showing default.');
-              }
-              // Fallback to a default location if geolocation fails
-              initializeMap(28.6139, 77.2090); // Default to Delhi
-            }
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          if (isMounted) {
+            const pos = { lat: position.coords.latitude, lng: position.coords.longitude };
+            setUserPosition(pos);
+            setCenter(pos);
+            setStatus('loaded');
           }
-        );
-      } else {
-        if (isMounted) {
-          setStatus('error');
-          setErrorMessage('Geolocation is not supported by your browser. Showing default.');
-          initializeMap(28.6139, 77.2090); // Default to Delhi
+        },
+        (error) => {
+          if (isMounted) {
+            if (error.code === error.PERMISSION_DENIED) {
+              setStatus('denied');
+              setErrorMessage('Location access denied. Showing default location.');
+            } else {
+              setStatus('error');
+              setErrorMessage('Could not retrieve your location. Showing default.');
+            }
+            // Fallback to default, status will be updated to loaded once map is ready
+            setStatus('loaded');
+          }
         }
+      );
+    } else {
+      if (isMounted) {
+        setStatus('error');
+        setErrorMessage('Geolocation is not supported. Showing default location.');
+        setStatus('loaded'); // Still load the map at default location
       }
-    };
-    
-    loadMap();
+    }
 
     return () => {
       isMounted = false;
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
-        mapInstanceRef.current = null;
-      }
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [MAPPPLS_API_KEY]); 
-
-
-  useEffect(() => {
-    if (status !== 'loaded' || !mapInstanceRef.current || !mappls) return;
-
-    // Clear existing doctor markers
-    markersRef.current.forEach(marker => marker.remove());
-    markersRef.current = [];
-
-    if (doctors) {
-      const bounds = new mappls.LngLatBounds();
-
-      doctors.forEach((doctor) => {
-        const marker = new mappls.Marker({
-          map: mapInstanceRef.current,
-          position: { lat: doctor.lat, lng: doctor.lng },
-        }).setPopupContent(`<b>${doctor.name}</b><br/>${doctor.specialty}<br/>${doctor.address}`);
-        markersRef.current.push(marker);
-        bounds.extend([doctor.lng, doctor.lat]);
-      });
-
-      if (doctors.length > 0) {
-        // Also include user's location in bounds if available
-        const userLoc = mapInstanceRef.current.getCenter();
-        bounds.extend([userLoc.lng, userLoc.lat]);
-        mapInstanceRef.current.fitBounds(bounds, { padding: 80 });
-      }
-    }
-  }, [doctors, status]);
-
+  }, [GOOGLE_MAPS_API_KEY]);
 
   const renderContent = () => {
-    switch (status) {
-      case 'loading':
+    if (!GOOGLE_MAPS_API_KEY || status === 'error' || status === 'denied') {
+        const title = status === 'denied' ? "Location Access Denied" : "Map Error";
         return (
-          <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
-            <Loader className="w-8 h-8 animate-spin mb-4" />
-            <p>Loading Map & Getting Location...</p>
-          </div>
+             <div className="absolute inset-0 bg-background/80 flex items-center justify-center p-4">
+                <div className="flex flex-col items-center justify-center h-full text-destructive p-4">
+                    <AlertTriangle className="w-8 h-8 mb-4" />
+                    <p className="font-semibold">{title}</p>
+                    <p className="text-sm text-center">{errorMessage}</p>
+                </div>
+            </div>
         );
-      case 'denied':
-        return (
-          <div className="flex flex-col items-center justify-center h-full text-amber-600 p-4">
-            <AlertTriangle className="w-8 h-8 mb-4" />
-            <p className="font-semibold">Location Access Denied</p>
-            <p className="text-sm text-center">Enable location services to see nearby doctors. Displaying default location.</p>
-          </div>
-        );
-      case 'error':
-        return (
-          <div className="flex flex-col items-center justify-center h-full text-destructive p-4">
-            <AlertTriangle className="w-8 h-8 mb-4" />
-             <p className="font-semibold">Map Error</p>
-            <p className="text-sm text-center">{errorMessage || 'An unknown error occurred.'}</p>
-          </div>
-        );
-      case 'loaded':
-        return null; // The map will be visible
     }
+
+    if (status === 'loading') {
+        return (
+            <div className="absolute inset-0 bg-background/80 flex items-center justify-center p-4">
+                <div className="flex flex-col items-center justify-center h-full text-muted-foreground">
+                    <Loader className="w-8 h-8 animate-spin mb-4" />
+                    <p>Loading Map & Getting Location...</p>
+                </div>
+            </div>
+        );
+    }
+    
+    return null; // Map is ready to be shown
   };
 
   return (
@@ -180,11 +102,28 @@ export function MapView({ doctors }: Props) {
       </CardHeader>
       <CardContent>
         <div className="relative aspect-video w-full rounded-lg overflow-hidden border bg-muted">
-            <div ref={mapRef} className="w-full h-full" />
-            {status !== 'loaded' && (
-                 <div className="absolute inset-0 bg-background/80 flex items-center justify-center p-4">
-                    {renderContent()}
-                 </div>
+            {renderContent()}
+            {status === 'loaded' && GOOGLE_MAPS_API_KEY && (
+                 <APIProvider apiKey={GOOGLE_MAPS_API_KEY}>
+                    <Map
+                        zoom={12}
+                        center={center}
+                        gestureHandling={'greedy'}
+                        disableDefaultUI={true}
+                        mapId="symptoscan-map"
+                    >
+                      {userPosition && (
+                          <AdvancedMarker position={userPosition} title="Your Location" />
+                      )}
+                      {doctors?.map((doctor, index) => (
+                          <AdvancedMarker key={index} position={{ lat: doctor.lat, lng: doctor.lng }} title={doctor.name}>
+                              <div className="w-6 h-6 bg-red-500 rounded-full border-2 border-white flex items-center justify-center text-white font-bold text-xs shadow-lg">
+                                H
+                              </div>
+                          </AdvancedMarker>
+                      ))}
+                    </Map>
+                 </APIProvider>
             )}
         </div>
       </CardContent>
