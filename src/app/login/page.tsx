@@ -22,7 +22,7 @@ import { Stethoscope } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 const GoogleIcon = () => (
-    <svg className="h-5 w-5" viewBox="0 0 24 24">
+    <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24">
       <path
         d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
         fill="#4285F4"
@@ -89,9 +89,12 @@ export default function LoginPage() {
       toast({ title: 'Success!', description: 'You have been signed in with Google.' });
       router.push('/');
     } catch (err: any) {
+        console.error("Google Sign-In Error:", err);
         let friendlyMessage = 'An error occurred during Google Sign-In. Please try again.';
         if (err.code === 'auth/account-exists-with-different-credential') {
             friendlyMessage = 'An account already exists with this email address. Please sign in with the original method.'
+        } else if (err.code === 'auth/popup-closed-by-user') {
+            friendlyMessage = 'Google Sign-In was cancelled.';
         }
        setError(friendlyMessage);
     } finally {
