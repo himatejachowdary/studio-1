@@ -85,11 +85,11 @@ export default function SignupPage() {
   };
 
   const handleGoogleSignIn = async () => {
+    setIsLoading(true);
     setError(null);
     try {
       const provider = new GoogleAuthProvider();
       await signInWithRedirect(auth, provider);
-       // The redirect will be handled by the FirebaseProvider
     } catch (err: any) {
         console.error("Google Sign-In Error:", err);
         let friendlyMessage = 'An error occurred during Google Sign-In. Please try again.';
@@ -97,6 +97,7 @@ export default function SignupPage() {
             friendlyMessage = 'An account already exists with this email address. Please sign in with the original method.'
         }
        setError(friendlyMessage);
+       setIsLoading(false);
     }
   };
 
