@@ -54,7 +54,6 @@ export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const {
@@ -81,7 +80,6 @@ export default function LoginPage() {
   };
 
   const handleGoogleSignIn = async () => {
-    setGoogleLoading(true);
     setError(null);
     try {
       const provider = new GoogleAuthProvider();
@@ -94,7 +92,6 @@ export default function LoginPage() {
             friendlyMessage = 'An account already exists with this email address. Please sign in with the original method.'
         }
        setError(friendlyMessage);
-       setGoogleLoading(false);
     }
   };
 
@@ -122,12 +119,12 @@ export default function LoginPage() {
             <form onSubmit={handleSubmit(handleLoginSubmit)} className="space-y-4">
                 <div className="space-y-2">
                     <Label htmlFor="email">Email Address</Label>
-                    <Input id="email" type="email" placeholder="name@example.com" {...register('email')} disabled={isLoading || googleLoading} />
+                    <Input id="email" type="email" placeholder="name@example.com" {...register('email')} disabled={isLoading} />
                     {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="password">Password</Label>
-                    <Input id="password" type="password" placeholder="••••••••" {...register('password')} disabled={isLoading || googleLoading} />
+                    <Input id="password" type="password" placeholder="••••••••" {...register('password')} disabled={isLoading} />
                     {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
                 </div>
                 <div className="text-right">
@@ -135,7 +132,7 @@ export default function LoginPage() {
                         <Link href="/forgot-password">Forgot Password?</Link>
                     </Button>
                 </div>
-                <Button type="submit" className="w-full" disabled={isLoading || googleLoading}>
+                <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading ? <Loader className="animate-spin" /> : <Mail />}
                     Log In with Email
                 </Button>
@@ -150,8 +147,8 @@ export default function LoginPage() {
                 </div>
             </div>
 
-            <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={isLoading || googleLoading}>
-                {googleLoading ? <Loader className="animate-spin" /> : <GoogleIcon />}
+            <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={isLoading}>
+                <GoogleIcon />
                 Sign In with Google
             </Button>
         </div>

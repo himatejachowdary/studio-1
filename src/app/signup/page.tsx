@@ -55,7 +55,6 @@ export default function SignupPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const {
@@ -86,7 +85,6 @@ export default function SignupPage() {
   };
 
   const handleGoogleSignIn = async () => {
-    setGoogleLoading(true);
     setError(null);
     try {
       const provider = new GoogleAuthProvider();
@@ -99,7 +97,6 @@ export default function SignupPage() {
             friendlyMessage = 'An account already exists with this email address. Please sign in with the original method.'
         }
        setError(friendlyMessage);
-       setGoogleLoading(false);
     }
   };
 
@@ -127,15 +124,15 @@ export default function SignupPage() {
             <form onSubmit={handleSubmit(handleSignupSubmit)} className="space-y-4">
                 <div className="space-y-2">
                     <Label htmlFor="email">Email Address</Label>
-                    <Input id="email" type="email" placeholder="name@example.com" {...register('email')} disabled={isLoading || googleLoading} />
+                    <Input id="email" type="email" placeholder="name@example.com" {...register('email')} disabled={isLoading} />
                     {errors.email && <p className="text-sm text-destructive">{errors.email.message}</p>}
                 </div>
                 <div className="space-y-2">
                     <Label htmlFor="password">Password</Label>
-                    <Input id="password" type="password" placeholder="•••••••• (at least 6 characters)" {...register('password')} disabled={isLoading || googleLoading} />
+                    <Input id="password" type="password" placeholder="•••••••• (at least 6 characters)" {...register('password')} disabled={isLoading} />
                     {errors.password && <p className="text-sm text-destructive">{errors.password.message}</p>}
                 </div>
-                <Button type="submit" className="w-full" disabled={isLoading || googleLoading}>
+                <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading ? <Loader className="animate-spin" /> : <Mail />}
                     Sign Up with Email
                 </Button>
@@ -150,8 +147,8 @@ export default function SignupPage() {
                 </div>
             </div>
 
-            <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={isLoading || googleLoading}>
-                {googleLoading ? <Loader className="animate-spin" /> : <GoogleIcon />}
+            <Button variant="outline" className="w-full" onClick={handleGoogleSignIn} disabled={isLoading}>
+                <GoogleIcon />
                 Sign Up with Google
             </Button>
         </div>
