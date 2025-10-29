@@ -90,6 +90,24 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
       auth,
       async (firebaseUser) => { // Auth state determined
         setUserAuthState({ user: firebaseUser, isUserLoading: false, userError: null });
+        if (firebaseUser) {
+            try {
+                const idToken = await firebaseUser.getIdToken();
+                // Store the token in a cookie
+                await fetch('/api/auth/session', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ idToken }),
+                });
+            } catch (e) {
+                console.error("Error setting session cookie:", e);
+            }
+        } else {
+            // Clear the cookie on logout
+            await fetch('/api/auth/session', { method: 'DELETE' });
+        }
       },
       (error) => { // Auth listener error
         console.error("FirebaseProvider: onAuthStateChanged error:", error);
