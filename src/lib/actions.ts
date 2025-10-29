@@ -22,14 +22,6 @@ export async function getAnalysis(
   prevState: any,
   formData: FormData
 ): Promise<FormState> {
-  const { firebaseApp, currentUser } = await getAuthenticatedAppForUser();
-  if (!firebaseApp || !currentUser) {
-    return {
-      message: 'Authentication failed',
-      result: null,
-      error: 'You must be logged in to perform an analysis.'
-    }
-  }
 
   const validatedFields = schema.safeParse({
     symptoms: formData.get('symptoms'),
@@ -46,6 +38,15 @@ export async function getAnalysis(
   }
 
   try {
+    const { currentUser } = await getAuthenticatedAppForUser();
+    if (!currentUser) {
+      return {
+        message: 'Authentication failed',
+        result: null,
+        error: 'You must be logged in to perform an analysis.'
+      }
+    }
+
     const result = await analyzeSymptomsAndSuggestConditions(validatedFields.data);
     
     // Automatically save the analysis
@@ -60,12 +61,12 @@ export async function getAnalysis(
         result, 
         error: null,
     };
-  } catch (e) {
+  } catch (e: any) {
     console.error(e);
     return { 
         message: "Analysis failed", 
         result: null, 
-        error: "An error occurred during analysis. Please try again.",
+        error: e.message || "An error occurred during analysis. Please try again.",
     };
   }
 }
