@@ -1,6 +1,7 @@
 'use client';
 
-import { useActionState, useFormStatus, useEffect, useRef } from 'react';
+import { useActionState, useEffect, useRef } from 'react';
+import { useFormStatus } from 'react-dom';
 import { getAnalysis } from '@/lib/actions';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
