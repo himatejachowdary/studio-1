@@ -52,9 +52,10 @@ function SubmitButton() {
 export function SymptomAnalyzer({ onAnalysisUpdate, onLoadingChange, onErrorChange, onSos }: SymptomAnalyzerProps) {
   const initialState = { message: '', result: null, error: null, symptoms: '', medicalHistory: '' };
   const [state, formAction] = useActionState(getAnalysis, initialState);
-  const { pending } = useFormStatus();
   const formRef = useRef<HTMLFormElement>(null);
   const { toast } = useToast();
+
+  const { pending } = useFormStatus();
 
   useEffect(() => {
     onLoadingChange(pending);
