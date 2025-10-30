@@ -52,9 +52,10 @@ export async function getAnalysis(
   }
   
   try {
+    // This function will throw an error if the server is not configured, which we catch below.
     const { currentUser } = await getAuthenticatedAppForUser();
     if (currentUser?.uid) {
-       // Attempt to save the analysis, but don't block the user if it fails
+       // Attempt to save the analysis.
        await saveDiagnosis(currentUser.uid, {
         ...result,
         symptoms: validatedFields.data.symptoms,
@@ -65,22 +66,23 @@ export async function getAnalysis(
           result, 
           error: null,
       };
-    } else {
-       // This case means user is not logged in. We can still return the result.
-       return {
-          message: "Analysis complete",
-          result,
-          error: null,
-       }
     }
   } catch(e: any) {
       console.error("Failed to save diagnosis:", e);
-      // Return the result to the user even if saving failed, but log the error.
-      // The most likely cause is a missing FIREBASE_SERVICE_ACCOUNT_KEY
+      // This path is taken if the server environment is not configured.
+      // We return the result to the user, but log the server-side error.
       return { 
         message: "Analysis complete, but failed to save to history.", 
         result, 
-        error: null, // We don't show this error to the user
+        error: null, // We don't show a blocking error to the user for this.
     };
   }
+
+  // This case means the user is not logged in. We can still return the result.
+  return {
+    message: "Analysis complete",
+    result,
+    error: null,
+  }
 }
+

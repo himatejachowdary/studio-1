@@ -20,33 +20,25 @@ const getApp = () => {
     return initializeApp({
       credential: cert(serviceAccount),
     });
-  } catch (e) {
-    console.error('Failed to parse FIREBASE_SERVICE_ACCOUNT_KEY. Make sure it is a valid JSON object.', e);
+  } catch (e: any) {
+    console.error('Failed to parse FIREBASE_SERVICE_ACCOUNT_KEY. Make sure it is a valid JSON object.', e.message);
     throw new Error('FIREBASE_SERVICE_ACCOUNT_KEY is not a valid JSON object.');
   }
 };
 
 export async function getAuthenticatedAppForUser() {
   const idToken = await getIdToken();
+  const app = getApp(); // This will throw if service account is not set up, which is intended.
+  const firestore = getFirestore(app);
 
-  try {
-    const app = getApp();
-    const firestore = getFirestore(app);
-
-    if (!idToken) {
-      // Return firestore instance even if user is not authenticated
-      // Useful for public data access if needed in the future
-      return { app: null, currentUser: null, firestore };
-    }
-
-    const decodedToken = await auth(app).verifyIdToken(idToken);
-    return { app, currentUser: decodedToken, firestore };
-  } catch (error) {
-    console.error('Error in getAuthenticatedAppForUser:', error);
-    // This allows parts of the app (like AI analysis) to function even if server auth is misconfigured.
-    // The error will be caught in the action, and the result will still be returned to the user.
-    throw error;
+  if (!idToken) {
+    // Return firestore instance even if user is not authenticated
+    // But currentUser will be null.
+    return { app, currentUser: null, firestore };
   }
+
+  const decodedToken = await auth(app).verifyIdToken(idToken);
+  return { app, currentUser: decodedToken, firestore };
 }
 
 async function getIdToken() {
@@ -54,3 +46,4 @@ async function getIdToken() {
   const sessionCookie = cookieStore.get('__session');
   return sessionCookie?.value;
 }
+
