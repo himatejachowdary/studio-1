@@ -8,7 +8,7 @@ import { Auth, User, onAuthStateChanged, getRedirectResult } from 'firebase/auth
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 import { handleSignInWithEmailLink } from './auth';
 import { useToast } from '@/hooks/use-toast';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 
 interface FirebaseProviderProps {
   children: ReactNode;
@@ -72,6 +72,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   });
   const { toast } = useToast();
   const router = useRouter();
+  const pathname = usePathname();
 
 
   // Effect to subscribe to Firebase auth state changes
@@ -91,7 +92,12 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
       auth,
       async (firebaseUser) => { // Auth state determined
         setUserAuthState({ user: firebaseUser, isUserLoading: false, userError: null });
+
         if (firebaseUser) {
+            // If user is logged in, redirect them from auth pages to the root.
+            if (pathname === '/login' || pathname === '/signup') {
+                router.push('/');
+            }
             try {
                 const idToken = await firebaseUser.getIdToken();
                 // Store the token in a cookie
@@ -117,7 +123,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
     );
 
     return () => unsubscribe(); // Cleanup
-  }, [auth, toast, router]);
+  }, [auth, toast, router, pathname]);
 
   // This effect should run once on mount to check for redirect.
   useEffect(() => {
@@ -125,7 +131,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
           try {
               const result = await getRedirectResult(auth);
               if (result) {
-                  toast({ title: 'Success!', description: 'You have been signed in with Google.' });
+                  toast({ title: 'Success!', description: 'You have been signed in.' });
                   router.push('/');
               }
           } catch (error: any) {
