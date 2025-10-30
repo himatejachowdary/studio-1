@@ -4,11 +4,10 @@
 import React, { DependencyList, createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
 import { FirebaseApp } from 'firebase/app';
 import { Firestore } from 'firebase/firestore';
-import { Auth, User, onAuthStateChanged, getRedirectResult } from 'firebase/auth';
+import { Auth, User, onAuthStateChanged, getRedirectResult, isSignInWithEmailLink, signInWithEmailLink } from 'firebase/auth';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
-import { handleSignInWithEmailLink } from './auth';
 import { useToast } from '@/hooks/use-toast';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 
 interface FirebaseProviderProps {
   children: ReactNode;
@@ -72,6 +71,29 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   });
   const { toast } = useToast();
   const router = useRouter();
+  const pathname = usePathname();
+
+  const handleSignInWithEmailLink = async () => {
+    if (isSignInWithEmailLink(auth, window.location.href)) {
+        let email = window.localStorage.getItem('emailForSignIn');
+        if (!email) {
+            email = window.prompt('Please provide your email for confirmation');
+            if (!email) {
+                 toast({ variant: 'destructive', title: 'Sign-in failed', description: 'Email address is required to complete sign-in.' });
+                 return;
+            };
+        }
+        try {
+            await signInWithEmailLink(auth, email, window.location.href);
+            window.localStorage.removeItem('emailForSignIn');
+            toast({ title: 'Success!', description: 'You have been logged in.' });
+            router.push('/');
+        } catch (error) {
+            console.error("Sign in with email link error", error);
+            toast({ variant: 'destructive', title: 'Sign-in Failed', description: 'The sign-in link is invalid or has expired.' });
+        }
+    }
+  }
 
   // This effect should run once on mount to check for redirect.
   useEffect(() => {
@@ -80,7 +102,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
               const result = await getRedirectResult(auth);
               if (result) {
                   toast({ title: 'Success!', description: 'You have been signed in.' });
-                  router.push('/');
+                  // This redirect is handled by the onAuthStateChanged effect
               }
           } catch (error: any) {
               console.error("Google Sign-In Redirect Error:", error);
@@ -91,7 +113,10 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
               toast({ variant: 'destructive', title: 'Sign-in Failed', description: friendlyMessage });
           }
       };
+      
       checkRedirect();
+      handleSignInWithEmailLink();
+
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [auth]);
 
@@ -103,18 +128,16 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
       return;
     }
     
-    // Check for sign-in with email link
-    handleSignInWithEmailLink(auth, () => {
-        toast({ title: 'Success!', description: 'You have been logged in.' });
-        router.push('/');
-    });
-
     const unsubscribe = onAuthStateChanged(
       auth,
       async (firebaseUser) => { // Auth state determined
         setUserAuthState({ user: firebaseUser, isUserLoading: false, userError: null });
 
         if (firebaseUser) {
+            // If user is logged in, and they are on login/signup, redirect to home.
+            if (pathname === '/login' || pathname === '/signup') {
+                router.push('/');
+            }
             try {
                 const idToken = await firebaseUser.getIdToken();
                 // Store the token in a cookie
@@ -140,7 +163,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
     );
 
     return () => unsubscribe(); // Cleanup
-  }, [auth, toast, router]);
+  }, [auth, toast, router, pathname]);
 
   // Memoize the context value
   const contextValue = useMemo((): FirebaseContextState => {
@@ -227,3 +250,5 @@ export const useUser = (): UserHookResult => { // Renamed from useAuthUser
   const { user, isUserLoading, userError } = useFirebase(); // Leverages the main hook
   return { user, isUserLoading, userError };
 };
+
+    

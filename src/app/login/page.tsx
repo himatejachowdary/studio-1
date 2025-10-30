@@ -15,9 +15,9 @@ import {
   GoogleAuthProvider,
   getMultiFactorResolver,
   MultiFactorError,
-  TotpMultiFactorGenerator
+  sendSignInLinkToEmail,
 } from 'firebase/auth';
-import { Loader, Mail, AlertTriangle } from 'lucide-react';
+import { Loader, Mail, AlertTriangle, Send } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import Link from 'next/link';
@@ -52,7 +52,12 @@ const loginSchema = z.object({
   password: z.string().min(1, 'Password is required.'),
 });
 
+const emailLinkSchema = z.object({
+    email: z.string().email('Please enter a valid email address.'),
+});
+
 type LoginFormValues = z.infer<typeof loginSchema>;
+type EmailLinkFormValues = z.infer<typeof emailLinkSchema>;
 
 export default function LoginPage() {
   const auth = useAuth();
@@ -60,15 +65,16 @@ export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [isLinkLoading, setIsLinkLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mfaResolver, setMfaResolver] = useState<MultiFactorResolver | null>(null);
 
    useEffect(() => {
+    // If a user is logged in and not in an MFA flow, redirect them away from the login page.
     if (user && !mfaResolver) {
       router.push('/');
     }
   }, [user, router, mfaResolver]);
-
 
   const {
     register,
@@ -77,6 +83,14 @@ export default function LoginPage() {
   } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
   });
+
+  const {
+    register: registerEmailLink,
+    handleSubmit: handleSubmitEmailLink,
+    formState: { errors: emailLinkErrors },
+  } = useForm<EmailLinkFormValues>({
+    resolver: zodResolver(emailLinkSchema)
+  })
 
   const handleLoginSubmit = async ({ email, password }: LoginFormValues) => {
     setIsLoading(true);
@@ -113,6 +127,31 @@ export default function LoginPage() {
        setError(friendlyMessage);
     }
   };
+
+  const handleEmailLinkSubmit = async ({ email }: EmailLinkFormValues) => {
+    setIsLinkLoading(true);
+    setError(null);
+    
+    const actionCodeSettings = {
+        url: `${window.location.origin}/login`, // Redirect back to this login page
+        handleCodeInApp: true,
+    };
+
+    try {
+        await sendSignInLinkToEmail(auth, email, actionCodeSettings);
+        window.localStorage.setItem('emailForSignIn', email);
+        toast({
+            title: 'Check Your Email',
+            description: `A sign-in link has been sent to ${email}.`,
+        });
+    } catch(err: any) {
+        console.error("Email Link Error:", err);
+        setError('Could not send sign-in link. Please try again.');
+    } finally {
+        setIsLinkLoading(false);
+    }
+  };
+
 
   if (isUserLoading || (user && !mfaResolver)) {
     return (
@@ -187,6 +226,27 @@ export default function LoginPage() {
                     <span className="w-full border-t" />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-card px-2 text-muted-foreground">Or</span>
+                </div>
+            </div>
+
+            <form onSubmit={handleSubmitEmailLink(handleEmailLinkSubmit)} className="space-y-4">
+                 <div className="space-y-2">
+                    <Label htmlFor="email-link">Sign in with Email Link (No Password)</Label>
+                    <Input id="email-link" type="email" placeholder="name@example.com" {...registerEmailLink('email')} disabled={isLinkLoading} />
+                    {emailLinkErrors.email && <p className="text-sm text-destructive">{emailLinkErrors.email.message}</p>}
+                </div>
+                <Button variant="secondary" type="submit" className="w-full" disabled={isLinkLoading}>
+                    {isLinkLoading ? <Loader className="animate-spin" /> : <Send />}
+                    Send Sign-In Link
+                </Button>
+            </form>
+            
+            <div className="relative my-6">
+                <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
                     <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
                 </div>
             </div>
@@ -208,3 +268,5 @@ export default function LoginPage() {
     </div>
   );
 }
+
+    
