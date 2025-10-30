@@ -1,4 +1,4 @@
-import { Stethoscope, User, LogIn, LogOut, History } from 'lucide-react';
+import { Stethoscope, User, LogIn, LogOut, History, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
@@ -22,6 +22,12 @@ export function Header({ isLoggedIn, onLogin, onLogout }: HeaderProps) {
       <div className="flex items-center gap-2">
         {isLoggedIn ? (
           <>
+            <Button asChild variant="ghost" size="sm">
+              <Link href="/mfa">
+                <Lock className="mr-2 h-4 w-4" />
+                MFA
+              </Link>
+            </Button>
             <Button asChild variant="ghost" size="sm">
               <Link href="/history">
                 <History className="mr-2 h-4 w-4" />

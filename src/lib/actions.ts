@@ -4,7 +4,7 @@
 import { analyzeSymptomsAndSuggestConditions } from "@/ai/flows/analyze-symptoms-and-suggest-conditions";
 import { z } from "zod";
 import type { AnalysisResult } from "./types";
-import { saveDiagnosis } from "./data";
+import { saveDiagnosis, generateTotpSecret } from "./data";
 import { getAuthenticatedAppForUser } from "@/lib/firebase-admin";
 
 const schema = z.object({
@@ -86,3 +86,16 @@ export async function getAnalysis(
   }
 }
 
+export async function getTotpSecret() {
+    try {
+        const { currentUser } = await getAuthenticatedAppForUser();
+        if (!currentUser) {
+            return { error: 'You must be logged in to set up MFA.' };
+        }
+        const secret = await generateTotpSecret(currentUser.uid);
+        return { secret };
+    } catch (e: any) {
+        console.error('Error generating TOTP secret:', e);
+        return { error: e.message || 'Failed to start MFA enrollment.' };
+    }
+}

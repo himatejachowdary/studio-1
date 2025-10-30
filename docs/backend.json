@@ -71,7 +71,8 @@
       "anonymous",
       "email",
       "phone",
-      "google"
+      "google",
+      "mfa"
     ]
   },
   "firestore": {

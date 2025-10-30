@@ -12,7 +12,10 @@ import { useAuth, useUser } from '@/firebase';
 import { 
   signInWithEmailAndPassword,
   signInWithRedirect,
-  GoogleAuthProvider
+  GoogleAuthProvider,
+  getMultiFactorResolver,
+  MultiFactorError,
+  TotpMultiFactorGenerator
 } from 'firebase/auth';
 import { Loader, Mail, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
@@ -20,6 +23,8 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import Link from 'next/link';
 import { Stethoscope } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { MfaVerification } from '@/components/mfa-verification';
+import type { MultiFactorResolver } from 'firebase/auth';
 
 const GoogleIcon = () => (
     <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24">
@@ -56,12 +61,13 @@ export default function LoginPage() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [mfaResolver, setMfaResolver] = useState<MultiFactorResolver | null>(null);
 
    useEffect(() => {
-    if (user) {
+    if (user && !mfaResolver) {
       router.push('/');
     }
-  }, [user, router]);
+  }, [user, router, mfaResolver]);
 
 
   const {
@@ -75,13 +81,19 @@ export default function LoginPage() {
   const handleLoginSubmit = async ({ email, password }: LoginFormValues) => {
     setIsLoading(true);
     setError(null);
+    setMfaResolver(null);
     try {
       await signInWithEmailAndPassword(auth, email, password);
       toast({ title: 'Success!', description: 'You have been logged in.' });
       router.push('/');
     } catch (err: any) {
-      let friendlyMessage = 'Invalid email or password. Please try again.';
-      setError(friendlyMessage);
+      if (err.code === 'auth/multi-factor-auth-required') {
+        const resolver = getMultiFactorResolver(auth, err as MultiFactorError);
+        setMfaResolver(resolver);
+      } else {
+        let friendlyMessage = 'Invalid email or password. Please try again.';
+        setError(friendlyMessage);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -102,13 +114,29 @@ export default function LoginPage() {
     }
   };
 
-  if (isUserLoading || user) {
+  if (isUserLoading || (user && !mfaResolver)) {
     return (
         <div className="flex min-h-screen flex-col justify-center items-center bg-secondary/20 p-4">
             <Loader className="animate-spin text-primary w-10 h-10" />
             <p className="text-muted-foreground mt-4">Loading your session...</p>
         </div>
     );
+  }
+
+  if (mfaResolver) {
+    return (
+        <MfaVerification
+            mfaResolver={mfaResolver}
+            onVerificationSuccess={() => {
+                toast({ title: 'Success!', description: 'You have been logged in.' });
+                router.push('/');
+            }}
+            onVerificationFailure={(err) => {
+                setError(err);
+                setMfaResolver(null);
+            }}
+        />
+    )
   }
 
   return (
