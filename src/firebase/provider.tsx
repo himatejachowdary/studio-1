@@ -8,7 +8,7 @@ import { Auth, User, onAuthStateChanged, getRedirectResult } from 'firebase/auth
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 import { handleSignInWithEmailLink } from './auth';
 import { useToast } from '@/hooks/use-toast';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 
 interface FirebaseProviderProps {
   children: ReactNode;
@@ -72,7 +72,28 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
   });
   const { toast } = useToast();
   const router = useRouter();
-  const pathname = usePathname();
+
+  // This effect should run once on mount to check for redirect.
+  useEffect(() => {
+      const checkRedirect = async () => {
+          try {
+              const result = await getRedirectResult(auth);
+              if (result) {
+                  toast({ title: 'Success!', description: 'You have been signed in.' });
+                  router.push('/');
+              }
+          } catch (error: any) {
+              console.error("Google Sign-In Redirect Error:", error);
+              let friendlyMessage = 'An error occurred during Google Sign-In. Please try again.';
+              if (error.code === 'auth/account-exists-with-different-credential') {
+                  friendlyMessage = 'An account already exists with this email. Please sign in using the original method.'
+              }
+              toast({ variant: 'destructive', title: 'Sign-in Failed', description: friendlyMessage });
+          }
+      };
+      checkRedirect();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [auth]);
 
 
   // Effect to subscribe to Firebase auth state changes
@@ -94,10 +115,6 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
         setUserAuthState({ user: firebaseUser, isUserLoading: false, userError: null });
 
         if (firebaseUser) {
-            // If user is logged in, redirect them from auth pages to the root.
-            if (pathname === '/login' || pathname === '/signup') {
-                router.push('/');
-            }
             try {
                 const idToken = await firebaseUser.getIdToken();
                 // Store the token in a cookie
@@ -123,29 +140,7 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
     );
 
     return () => unsubscribe(); // Cleanup
-  }, [auth, toast, router, pathname]);
-
-  // This effect should run once on mount to check for redirect.
-  useEffect(() => {
-      const checkRedirect = async () => {
-          try {
-              const result = await getRedirectResult(auth);
-              if (result) {
-                  toast({ title: 'Success!', description: 'You have been signed in.' });
-                  router.push('/');
-              }
-          } catch (error: any) {
-              console.error("Google Sign-In Redirect Error:", error);
-              let friendlyMessage = 'An error occurred during Google Sign-In. Please try again.';
-              if (error.code === 'auth/account-exists-with-different-credential') {
-                  friendlyMessage = 'An account already exists with this email. Please sign in using the original method.'
-              }
-              toast({ variant: 'destructive', title: 'Sign-in Failed', description: friendlyMessage });
-          }
-      };
-      checkRedirect();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [auth]);
+  }, [auth, toast, router]);
 
   // Memoize the context value
   const contextValue = useMemo((): FirebaseContextState => {

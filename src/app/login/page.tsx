@@ -1,14 +1,14 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useAuth } from '@/firebase';
+import { useAuth, useUser } from '@/firebase';
 import { 
   signInWithEmailAndPassword,
   signInWithRedirect,
@@ -51,10 +51,18 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 
 export default function LoginPage() {
   const auth = useAuth();
+  const { user, isUserLoading } = useUser();
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+   useEffect(() => {
+    if (user) {
+      router.push('/');
+    }
+  }, [user, router]);
+
 
   const {
     register,
@@ -80,7 +88,6 @@ export default function LoginPage() {
   };
 
   const handleGoogleSignIn = async () => {
-    setIsLoading(true);
     setError(null);
     try {
       const provider = new GoogleAuthProvider();
@@ -92,9 +99,17 @@ export default function LoginPage() {
             friendlyMessage = 'An account already exists with this email address. Please sign in with the original method.'
         }
        setError(friendlyMessage);
-       setIsLoading(false);
     }
   };
+
+  if (isUserLoading || user) {
+    return (
+        <div className="flex min-h-screen flex-col justify-center items-center bg-secondary/20 p-4">
+            <Loader className="animate-spin text-primary w-10 h-10" />
+            <p className="text-muted-foreground mt-4">Loading your session...</p>
+        </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen flex-col justify-center items-center bg-secondary/20 p-4">
