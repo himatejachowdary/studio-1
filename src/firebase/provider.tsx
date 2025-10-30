@@ -4,7 +4,7 @@
 import React, { DependencyList, createContext, useContext, ReactNode, useMemo, useState, useEffect } from 'react';
 import { FirebaseApp } from 'firebase/app';
 import { Firestore } from 'firebase/firestore';
-import { Auth, User, onAuthStateChanged, getRedirectResult, GoogleAuthProvider } from 'firebase/auth';
+import { Auth, User, onAuthStateChanged, getRedirectResult } from 'firebase/auth';
 import { FirebaseErrorListener } from '@/components/FirebaseErrorListener';
 import { handleSignInWithEmailLink } from './auth';
 import { useToast } from '@/hooks/use-toast';
@@ -115,29 +115,31 @@ export const FirebaseProvider: React.FC<FirebaseProviderProps> = ({
         setUserAuthState({ user: null, isUserLoading: false, userError: error });
       }
     );
-    
-    // This effect should run once on mount to check for redirect.
-    // It's separate from onAuthStateChanged to avoid re-triggering.
-    const checkRedirect = async () => {
-        try {
-            const result = await getRedirectResult(auth);
-            if (result) {
-                toast({ title: 'Success!', description: 'You have been signed in with Google.' });
-                router.push('/');
-            }
-        } catch (error: any) {
-            console.error("Google Sign-In Redirect Error:", error);
-            let friendlyMessage = 'An error occurred during Google Sign-In. Please try again.';
-            if (error.code === 'auth/account-exists-with-different-credential') {
-                friendlyMessage = 'An account already exists with this email. Please sign in using the original method.'
-            }
-            toast({ variant: 'destructive', title: 'Sign-in Failed', description: friendlyMessage });
-        }
-    };
-    checkRedirect();
 
     return () => unsubscribe(); // Cleanup
-  }, [auth, toast, router]); // Depends on the auth instance
+  }, [auth, toast, router]);
+
+  // This effect should run once on mount to check for redirect.
+  useEffect(() => {
+      const checkRedirect = async () => {
+          try {
+              const result = await getRedirectResult(auth);
+              if (result) {
+                  toast({ title: 'Success!', description: 'You have been signed in with Google.' });
+                  router.push('/');
+              }
+          } catch (error: any) {
+              console.error("Google Sign-In Redirect Error:", error);
+              let friendlyMessage = 'An error occurred during Google Sign-In. Please try again.';
+              if (error.code === 'auth/account-exists-with-different-credential') {
+                  friendlyMessage = 'An account already exists with this email. Please sign in using the original method.'
+              }
+              toast({ variant: 'destructive', title: 'Sign-in Failed', description: friendlyMessage });
+          }
+      };
+      checkRedirect();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [auth]);
 
   // Memoize the context value
   const contextValue = useMemo((): FirebaseContextState => {
