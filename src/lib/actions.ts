@@ -4,7 +4,7 @@
 import { analyzeSymptomsAndSuggestConditions } from "@/ai/flows/analyze-symptoms-and-suggest-conditions";
 import { z } from "zod";
 import type { AnalysisResult } from "./types";
-import { saveDiagnosis, generateTotpSecret } from "./data";
+import { saveDiagnosis } from "./data";
 import { getAuthenticatedAppForUser } from "@/lib/firebase-admin";
 
 const schema = z.object({
@@ -68,7 +68,7 @@ export async function getAnalysis(
       };
     }
   } catch(e: any) {
-      console.error("Failed to save diagnosis:", e);
+      console.warn("Could not save diagnosis to history. This is expected if the server is not configured for Firebase Admin.", e.message);
       // This path is taken if the server environment is not configured.
       // We return the result to the user, but log the server-side error.
       return { 
@@ -84,18 +84,4 @@ export async function getAnalysis(
     result,
     error: null,
   }
-}
-
-export async function getTotpSecret() {
-    try {
-        const { currentUser } = await getAuthenticatedAppForUser();
-        if (!currentUser) {
-            return { error: 'You must be logged in to set up MFA.' };
-        }
-        const secret = await generateTotpSecret(currentUser.uid);
-        return { secret };
-    } catch (e: any) {
-        console.error('Error generating TOTP secret:', e);
-        return { error: e.message || 'Failed to start MFA enrollment.' };
-    }
 }
