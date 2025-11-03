@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { signOut } from 'firebase/auth';
 import { useAuth } from '@/firebase';
+import { firebaseConfig } from '@/firebase/config';
 
 type Diagnosis = {
   id: string;
@@ -161,7 +162,8 @@ export default function HistoryPage() {
       <main className="flex-1 py-8 px-4 md:py-12 md:px-8">
         <div className="container mx-auto max-w-3xl">
             <h1 className="text-4xl font-bold font-headline mb-2">Diagnosis History</h1>
-            <p className="text-muted-foreground mb-8">A secure record of your past AI-powered symptom analyses.</p>
+            <p className="text-muted-foreground mb-1">A secure record of your past AI-powered symptom analyses.</p>
+            <p className="text-xs text-muted-foreground/70 mb-8">Connected to Project: <code className="bg-muted px-1 py-0.5 rounded">{firebaseConfig.projectId}</code></p>
             {renderContent()}
         </div>
       </main>
