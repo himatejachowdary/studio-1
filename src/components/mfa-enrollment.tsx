@@ -30,7 +30,7 @@ export function MfaEnrollment({ user }: MfaEnrollmentProps) {
   const [verificationCode, setVerificationCode] = useState('');
   const { toast } = useToast();
 
-  const isEnrolled = user.multiFactor.enrolledFactors.length > 0;
+  const isEnrolled = user.multiFactor?.enrolledFactors.length > 0;
 
   const handleStartEnrollment = async () => {
     setIsLoading(true);
