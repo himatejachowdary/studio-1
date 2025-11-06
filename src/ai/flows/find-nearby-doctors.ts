@@ -3,7 +3,7 @@
 /**
  * @fileOverview Finds nearby doctors and hospitals using AI.
  *
- * - findNearbyDoctors - A function that finds nearby doctors based on location and specialty.
+ * - findNearbyDoctors - a function that finds nearby doctors based on location and specialty.
  * - FindNearbyDoctorsInput - The input type for the findNearbyDoctors function.
  * - FindNearbyDoctorsOutput - The return type for the findNearbyDoctors function.
  */
