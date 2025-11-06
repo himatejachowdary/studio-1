@@ -3,8 +3,6 @@
 import { ai } from '@/ai/genkit';
 import { analysisSchema } from '@/lib/types';
 import { z } from 'zod';
-import { googleAI } from '@genkit-ai/google-genai';
-
 
 const analysisInputSchema = z.object({
   symptoms: z.string(),
@@ -23,7 +21,7 @@ export const analyzeSymptomsAndSuggestConditions = ai.defineFlow(
 
     const analysisPrompt = ai.definePrompt({
         name: 'analysisPrompt',
-        model: googleAI('gemini-2.5-flash'),
+        model: 'gemini-1.5-flash-latest',
         input: { schema: analysisInputSchema },
         output: { schema: analysisSchema },
         prompt: `You are an expert medical diagnostician AI. A user has provided their symptoms, age, and gender.
