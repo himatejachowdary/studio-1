@@ -6,13 +6,14 @@ import { AnalysisResults } from './analysis-results';
 import { DoctorRecommendations } from './doctor-recommendations';
 import { MapView } from './map-view';
 import type { Doctor } from '@/lib/types';
-import type { AnalysisAndDocsResult } from '@/lib/actions';
+import { getAnalysis, findNearbyDoctors, type AnalysisAndDocsResult } from '@/lib/actions';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { DatabaseZap, History, User } from 'lucide-react';
 import { useUser } from '@/firebase';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { Skeleton } from './ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
 
 
 export function SymptoScanDashboard() {
@@ -21,6 +22,7 @@ export function SymptoScanDashboard() {
   const [error, setError] = useState<string | null>(null);
 
   const { user, isUserLoading } = useUser();
+  const { toast } = useToast();
 
   const handleAnalysis = (res: AnalysisAndDocsResult | null) => {
     setAnalysisResult(res);
@@ -38,17 +40,48 @@ export function SymptoScanDashboard() {
 
   const handleSosSearch = async () => {
     setIsLoading(true);
-    // You might need a separate server action for just emergency search
-    // For now, this is a placeholder. A dedicated action would be better.
-    const emergencyAnalysis: AnalysisAndDocsResult = {
-      possibleConditions: 'Emergency Care',
-      confidenceLevel: 'High',
-      nextSteps: 'Seek immediate medical attention. We are locating the nearest hospitals for you.',
-      specialty: 'hospital',
-      doctors: [] // This would be populated by the action
-    };
-    setAnalysisResult(emergencyAnalysis);
-    setIsLoading(false);
+    setAnalysisResult(null);
+    setError(null);
+    
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { doctors } = await findNearbyDoctors({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            specialty: 'hospital',
+          });
+
+          const emergencyAnalysis: AnalysisAndDocsResult = {
+            possibleConditions: 'Emergency Care',
+            confidenceLevel: 'High',
+            nextSteps: 'Seek immediate medical attention. We are locating the nearest hospitals for you.',
+            specialty: 'hospital',
+            doctors: doctors,
+          };
+          setAnalysisResult(emergencyAnalysis);
+
+        } catch (e: any) {
+           setError('Could not fetch hospital data. Please try again.');
+           toast({
+            variant: "destructive",
+            title: "SOS Error",
+            description: "Failed to find nearby hospitals.",
+           })
+        } finally {
+          setIsLoading(false);
+        }
+      },
+      (error) => {
+        setError("Location access was denied. Cannot search for hospitals.");
+        toast({
+            variant: "destructive",
+            title: "Location Error",
+            description: "We need your location to find nearby hospitals for the SOS feature.",
+        })
+        setIsLoading(false);
+      }
+    );
   };
 
   const userIdentifier = user?.email || user?.phoneNumber || "Welcome";
