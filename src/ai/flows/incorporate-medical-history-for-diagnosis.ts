@@ -38,7 +38,7 @@ export async function incorporateMedicalHistoryForDiagnosis(
 
 const prompt = ai.definePrompt({
   name: 'incorporateMedicalHistoryForDiagnosisPrompt',
-  model: 'gemini-pro',
+  model: 'googleai/gemini-pro',
   input: {
     schema: IncorporateMedicalHistoryForDiagnosisInputSchema,
   },

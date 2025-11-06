@@ -1,5 +1,3 @@
-// This file is machine-generated - edit with care!
-
 'use server';
 
 /**
@@ -44,7 +42,7 @@ export async function interpretNaturalLanguageInput(
 
 const prompt = ai.definePrompt({
   name: 'interpretNaturalLanguageInputPrompt',
-  model: 'gemini-pro',
+  model: 'googleai/gemini-pro',
   input: {schema: InterpretNaturalLanguageInputInputSchema},
   output: {schema: InterpretNaturalLanguageInputOutputSchema},
   prompt: `You are a medical assistant. Please read the following symptoms provided by the user and return them as structured data.
