@@ -7,8 +7,4 @@ export const ai = genkit({
       apiKey: process.env.GEMINI_API_KEY,
     }),
   ],
-  defaultModel: {
-    vendor: 'googleai',
-    model: 'gemini-1.5-flash-latest',
-  },
 });
