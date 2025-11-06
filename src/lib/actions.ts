@@ -13,8 +13,8 @@ import { User } from 'firebase/auth';
 export async function getAnalysis(
   input: AnalysisInput
 ): Promise<AnalysisResult> {
-  const validatedInput = SymptomAnalysisInputSchema.parse(input);
   try {
+    const validatedInput = SymptomAnalysisInputSchema.parse(input);
     const output = await analyzeSymptomsAndSuggestConditions(validatedInput);
     return {
       possibleConditions: output.possibleConditions,
@@ -23,8 +23,9 @@ export async function getAnalysis(
       specialty: output.specialty,
     };
   } catch (e: any) {
-    console.error('Error getting analysis:', e);
-    throw new Error('Failed to get analysis from the AI model.');
+    console.error('Error in getAnalysis action:', e);
+    // Re-throw a plain Error object to ensure it's serializable.
+    throw new Error(e.message || 'Failed to get analysis from the AI model.');
   }
 }
 
@@ -84,7 +85,7 @@ export const findNearbyDoctorsFlow = ai.defineFlow(
 Return the results in the specified JSON format. For each doctor and hospital, provide the name, specialty, full address, phone number, and a numerical rating. If a website is available, include it.`;
 
     const { output } = await ai.generate({
-      model: 'gemini-1.5-flash',
+      model: 'googleAI/gemini-1.5-flash',
       prompt: prompt,
       output: {
         schema: FindDoctorsOutputSchema,
@@ -110,8 +111,9 @@ export async function findNearbyDoctors(
       longitude,
     });
     return result;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error in findNearbyDoctors action:', error);
-    throw new Error('Could not fetch doctor data.');
+    // Re-throw a plain Error object to ensure it's serializable.
+    throw new Error(error.message || 'Could not fetch doctor data.');
   }
 }
