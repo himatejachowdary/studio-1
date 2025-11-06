@@ -52,7 +52,7 @@ const prompt = ai.definePrompt({
   name: 'analyzeSymptomsAndSuggestConditionsPrompt',
   input: {schema: AnalyzeSymptomsAndSuggestConditionsInputSchema},
   output: {schema: AnalyzeSymptomsAndSuggestConditionsOutputSchema},
-  model: 'models/gemini-1.5-flash-latest',
+  model: 'gemini-1.5-flash',
   prompt: `You are a medical symptom analysis assistant.
 
 User will input symptoms in plain English.
