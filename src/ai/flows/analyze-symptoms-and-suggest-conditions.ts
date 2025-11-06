@@ -59,7 +59,7 @@ export const analyzeSymptomsAndSuggestConditions = ai.defineFlow(
     outputSchema: SymptomAnalysisOutputSchema,
   },
   async (input) => {
-    const { output } = await prompt(input, {model: 'googleAI/gemini-1.5-flash'});
+    const { output } = await prompt(input, {model: 'gemini-1.5-flash'});
     if (!output) {
       throw new Error('Analysis failed to generate a result.');
     }
