@@ -1,0 +1,117 @@
+'use server';
+
+import {
+  analyzeSymptomsAndSuggestConditions,
+  SymptomAnalysisInputSchema,
+} from '@/ai/flows/analyze-symptoms-and-suggest-conditions';
+import type { AnalysisInput, AnalysisResult, Diagnosis } from '@/lib/types';
+import { getAuthenticatedAppForUser } from '@/lib/firebase-admin';
+import { z } from 'zod';
+import { ai } from '@/ai/genkit';
+import { User } from 'firebase/auth';
+
+export async function getAnalysis(
+  input: AnalysisInput
+): Promise<AnalysisResult> {
+  const validatedInput = SymptomAnalysisInputSchema.parse(input);
+  try {
+    const output = await analyzeSymptomsAndSuggestConditions(validatedInput);
+    return {
+      possibleConditions: output.possibleConditions,
+      confidenceLevel: output.confidenceLevel,
+      nextSteps: output.nextSteps,
+      specialty: output.specialty,
+    };
+  } catch (e: any) {
+    console.error('Error getting analysis:', e);
+    throw new Error('Failed to get analysis from the AI model.');
+  }
+}
+
+export async function saveDiagnosis(
+  input: AnalysisInput & AnalysisResult
+): Promise<string> {
+  const { firestore, currentUser } = await getAuthenticatedAppForUser();
+  if (!currentUser) {
+    throw new Error('User must be authenticated to save a diagnosis.');
+  }
+
+  const diagnosisData: Omit<Diagnosis, 'id'> = {
+    ...input,
+    userId: currentUser.uid,
+    timestamp: new Date().toISOString(),
+  };
+
+  const docRef = await firestore
+    .collection('users')
+    .doc(currentUser.uid)
+    .collection('diagnoses')
+    .add(diagnosisData);
+  return docRef.id;
+}
+
+const FindDoctorsInputSchema = z.object({
+  specialty: z.string().describe('The medical specialty to search for.'),
+  latitude: z.number().describe('The latitude of the user.'),
+  longitude: z.number().describe('The longitude of the user.'),
+});
+
+const DoctorSchema = z.object({
+  name: z.string(),
+  specialty: z.string(),
+  address: z.string(),
+  phone: z.string(),
+  rating: z.number(),
+  website: z.string().optional(),
+});
+
+const FindDoctorsOutputSchema = z.object({
+  doctors: z.array(DoctorSchema).describe('A list of recommended doctors.'),
+  hospitals: z
+    .array(DoctorSchema)
+    .describe('A list of recommended hospitals.'),
+});
+
+export const findNearbyDoctorsFlow = ai.defineFlow(
+  {
+    name: 'findNearbyDoctorsFlow',
+    inputSchema: FindDoctorsInputSchema,
+    outputSchema: FindDoctorsOutputSchema,
+  },
+  async ({ specialty, latitude, longitude }) => {
+    const prompt = `You are a helpful medical directory assistant. Find 5 highly-rated doctors and 3 hospitals near the user's location for the given specialty. The user is at latitude ${latitude} and longitude ${longitude}. The specialty they need is: ${specialty}.
+
+Return the results in the specified JSON format. For each doctor and hospital, provide the name, specialty, full address, phone number, and a numerical rating. If a website is available, include it.`;
+
+    const { output } = await ai.generate({
+      model: 'gemini-1.5-flash-latest',
+      prompt: prompt,
+      output: {
+        schema: FindDoctorsOutputSchema,
+      },
+    });
+
+    if (!output) {
+      throw new Error('Could not find nearby doctors.');
+    }
+    return output;
+  }
+);
+
+export async function findNearbyDoctors(
+  specialty: string,
+  latitude: number,
+  longitude: number
+) {
+  try {
+    const result = await findNearbyDoctorsFlow({
+      specialty,
+      latitude,
+      longitude,
+    });
+    return result;
+  } catch (error) {
+    console.error('Error in findNearbyDoctors action:', error);
+    throw new Error('Could not fetch doctor data.');
+  }
+}
