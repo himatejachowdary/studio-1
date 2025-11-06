@@ -92,7 +92,8 @@ export function SymptomAnalyzer({
       const result = await getAnalysisAction(analysisInput);
       onAnalysisComplete(analysisInput, result);
     } catch (err: any) {
-      const errorMessage = err.message || 'An unknown error occurred during analysis.';
+      // Pass only the message string to the error handler
+      const errorMessage = String(err.message || 'An unknown error occurred during analysis.');
       setError(errorMessage);
       onAnalysisError(errorMessage);
       setIsLoading(false); // Stop loading on error

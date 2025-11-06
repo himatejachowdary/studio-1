@@ -29,6 +29,7 @@ export async function getAnalysis(
     };
   } catch (e: any) {
     console.error('Error in getAnalysis action:', e);
+    // Throw a simple, serializable error
     throw new Error(e.message || 'Failed to get analysis from the AI model.');
   }
 }
@@ -120,6 +121,7 @@ export async function findNearbyDoctors(
     return result;
   } catch (error: any) {
     console.error('Error in findNearbyDoctors action:', error);
+    // Throw a simple, serializable error
     throw new Error(error.message || 'Could not fetch doctor data.');
   }
 }
