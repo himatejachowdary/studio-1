@@ -20,7 +20,7 @@ export type AnalysisAndDocsResult = AnalysisResult & { doctors: Doctor[] | null 
 
 type FormState = {
     message: string;
-    result: AnalysisAndDocs_Result | null;
+    result: AnalysisAndDocsResult | null;
     error: string | null;
 }
 
@@ -82,6 +82,7 @@ export async function getAnalysis(
 
   const fullResult: AnalysisAndDocsResult = {
     ...analysisResult,
+    symptoms: validatedFields.data.symptoms,
     doctors,
   }
 
@@ -144,7 +145,7 @@ const findNearbyDoctorsPrompt = ai.definePrompt({
   name: 'findNearbyDoctorsPrompt',
   input: {schema: FindNearbyDoctorsInputSchema},
   output: {schema: FindNearbyDoctorsOutputSchema},
-  model: 'googleai/gemini-1.5-flash',
+  model: 'gemini-1.5-flash',
   prompt: `You are a helpful assistant that finds doctors and hospitals.
 Based on the user's location and the required specialty, find 3-5 relevant medical professionals or facilities.
 Provide their name, specialty, address, latitude, and longitude.
