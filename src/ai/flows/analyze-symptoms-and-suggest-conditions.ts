@@ -43,7 +43,7 @@ const AnalyzeSymptomsAndSuggestConditionsOutputSchema = z.object({
     .describe(
       'Recommended next steps for the user, such as consulting a doctor or seeking medical advice.'
     ),
-    specialty: z.string().describe('The medical specialty most relevant to the suggested conditions (e.g., "Cardiologist", "Dermatologist", "General Physician").'),
+  specialty: z.string().describe('The medical specialty most relevant to the suggested conditions (e.g., "Cardiologist", "Dermatologist", "General Physician").'),
 });
 export type AnalyzeSymptomsAndSuggestConditionsOutput = z.infer<
   typeof AnalyzeSymptomsAndSuggestConditionsOutputSchema
@@ -59,7 +59,7 @@ const prompt = ai.definePrompt({
   name: 'analyzeSymptomsAndSuggestConditionsPrompt',
   input: {schema: AnalyzeSymptomsAndSuggestConditionsInputSchema},
   output: {schema: AnalyzeSymptomsAndSuggestConditionsOutputSchema},
-  model: 'googleai/gemini-pro',
+  model: 'gemini-1.5-flash-preview',
   prompt: `You are an AI-powered medical assistant that analyzes symptoms
 provided by users and suggests possible medical conditions. Consider
 the user's medical history if provided and if the user has requested
