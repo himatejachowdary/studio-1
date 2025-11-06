@@ -26,6 +26,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { Stethoscope } from 'lucide-react';
 
 const formSchema = z.object({
   email: z.string().email('Invalid email address.'),
@@ -50,7 +51,7 @@ export default function SignupForm() {
     setIsSubmitting(true);
     try {
       await createUserWithEmailAndPassword(auth, values.email, values.password);
-      router.push('/');
+      router.push('/dashboard');
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -64,10 +65,13 @@ export default function SignupForm() {
 
   return (
     <Card className="w-full max-w-md shadow-lg">
-      <CardHeader>
-        <CardTitle className="text-3xl font-serif">Create Account</CardTitle>
+      <CardHeader className="items-center text-center">
+        <div className="flex justify-center items-center mb-4">
+            <Stethoscope className="w-12 h-12 text-primary" />
+        </div>
+        <CardTitle className="text-3xl font-serif">Create an Account</CardTitle>
         <CardDescription>
-          Get started with SymptoScan AI.
+          Get started with your intelligent health companion.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -78,7 +82,7 @@ export default function SignupForm() {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-lg">Email</FormLabel>
+                  <FormLabel>Email</FormLabel>
                   <FormControl>
                     <Input placeholder="you@example.com" {...field} />
                   </FormControl>
@@ -91,7 +95,7 @@ export default function SignupForm() {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-lg">Password</FormLabel>
+                  <FormLabel>Password</FormLabel>
                   <FormControl>
                     <Input type="password" placeholder="••••••••" {...field} />
                   </FormControl>

@@ -26,6 +26,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { Stethoscope } from 'lucide-react';
 
 const formSchema = z.object({
   email: z.string().email('Invalid email address.'),
@@ -50,7 +51,7 @@ export default function LoginForm() {
     setIsSubmitting(true);
     try {
       await signInWithEmailAndPassword(auth, values.email, values.password);
-      router.push('/');
+      router.push('/dashboard');
     } catch (error: any) {
       toast({
         variant: "destructive",
@@ -64,7 +65,10 @@ export default function LoginForm() {
 
   return (
     <Card className="w-full max-w-md shadow-lg">
-      <CardHeader>
+      <CardHeader className="items-center text-center">
+        <div className="flex justify-center items-center mb-4">
+            <Stethoscope className="w-12 h-12 text-primary" />
+        </div>
         <CardTitle className="text-3xl font-serif">Sign In</CardTitle>
         <CardDescription>
           Welcome back to SymptoScan AI.
@@ -78,7 +82,7 @@ export default function LoginForm() {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-lg">Email</FormLabel>
+                  <FormLabel>Email</FormLabel>
                   <FormControl>
                     <Input placeholder="you@example.com" {...field} />
                   </FormControl>
@@ -91,7 +95,7 @@ export default function LoginForm() {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-lg">Password</FormLabel>
+                  <FormLabel>Password</FormLabel>
                   <FormControl>
                     <Input type="password" placeholder="••••••••" {...field} />
                   </FormControl>

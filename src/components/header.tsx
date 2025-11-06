@@ -1,30 +1,45 @@
 'use client';
 
-import { useAuth } from '@/firebase';
-import { Activity, LogOut } from 'lucide-react';
+import { useAuth, useUser } from '@/firebase';
+import { LogOut, Stethoscope } from 'lucide-react';
 import { Button } from './ui/button';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { cn } from '@/lib/utils';
 
-export default function Header() {
+export default function Header({ className }: { className?: string }) {
   const auth = useAuth();
+  const { user } = useUser();
   const router = useRouter();
 
   const handleSignOut = async () => {
     await auth.signOut();
-    router.push('/login');
+    router.push('/');
   };
 
   return (
-    <header className="flex h-16 items-center justify-between border-b bg-background px-4 md:px-6">
-      <div className="flex items-center gap-2 font-semibold">
-        <Activity className="h-6 w-6 text-primary" />
+    <header className={cn("flex h-16 items-center justify-between border-b bg-white px-4 md:px-6", className)}>
+      <Link href="/" className="flex items-center gap-2 font-semibold">
+        <Stethoscope className="h-6 w-6 text-primary" />
         <span className="text-lg font-serif">SymptoScan AI</span>
+      </Link>
+      <div className='flex items-center gap-2'>
+        {user ? (
+          <Button variant="ghost" size="sm" onClick={handleSignOut}>
+            <LogOut className="h-4 w-4 mr-2" />
+            Sign Out
+          </Button>
+        ) : (
+          <>
+            <Button variant="ghost" size="sm" asChild>
+                <Link href="/login">Sign In</Link>
+            </Button>
+            <Button size="sm" asChild>
+                <Link href="/signup">Sign Up</Link>
+            </Button>
+          </>
+        )}
       </div>
-      {auth.currentUser && (
-        <Button variant="ghost" size="icon" onClick={handleSignOut} aria-label="Sign out">
-          <LogOut className="h-5 w-5" />
-        </Button>
-      )}
     </header>
   );
 }
