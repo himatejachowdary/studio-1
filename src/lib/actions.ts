@@ -4,7 +4,7 @@ import {
   analyzeSymptomsAndSuggestConditions,
   SymptomAnalysisInputSchema,
 } from '@/ai/flows/analyze-symptoms-and-suggest-conditions';
-import type { AnalysisInput, AnalysisResult, Diagnosis } from '@/lib/types';
+import type { AnalysisInput, AnalysisResult, Diagnosis, NearbyDoctorResult } from '@/lib/types';
 import { getAuthenticatedAppForUser } from '@/lib/firebase-admin';
 import { z } from 'zod';
 import { ai } from '@/ai/genkit';
@@ -106,7 +106,7 @@ export async function findNearbyDoctors(
   specialty: string,
   latitude: number,
   longitude: number
-) {
+): Promise<NearbyDoctorResult> {
   try {
     const result = await findNearbyDoctorsFlow({
       specialty,
