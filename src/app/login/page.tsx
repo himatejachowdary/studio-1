@@ -70,7 +70,6 @@ export default function LoginPage() {
   const [mfaResolver, setMfaResolver] = useState<MultiFactorResolver | null>(null);
 
    useEffect(() => {
-    // If a user is logged in and not in an MFA flow, redirect them away from the login page.
     if (user && !mfaResolver) {
       router.push('/');
     }
@@ -96,6 +95,11 @@ export default function LoginPage() {
     setIsLoading(true);
     setError(null);
     setMfaResolver(null);
+    if (!auth) {
+        setError("Authentication service is not available.");
+        setIsLoading(false);
+        return;
+    }
     try {
       await signInWithEmailAndPassword(auth, email, password);
       toast({ title: 'Success!', description: 'You have been logged in.' });
@@ -115,6 +119,10 @@ export default function LoginPage() {
 
   const handleGoogleSignIn = async () => {
     setError(null);
+    if (!auth) {
+        setError("Authentication service is not available.");
+        return;
+    }
     try {
       const provider = new GoogleAuthProvider();
       await signInWithRedirect(auth, provider);
@@ -131,9 +139,13 @@ export default function LoginPage() {
   const handleEmailLinkSubmit = async ({ email }: EmailLinkFormValues) => {
     setIsLinkLoading(true);
     setError(null);
-    
+    if (!auth) {
+        setError("Authentication service is not available.");
+        setIsLinkLoading(false);
+        return;
+    }
     const actionCodeSettings = {
-        url: `${window.location.origin}/login`, // Redirect back to this login page
+        url: `${window.location.origin}/login`,
         handleCodeInApp: true,
     };
 
@@ -188,7 +200,7 @@ export default function LoginPage() {
                     SymptoScan
                 </h1>
             </Link>
-            <p className="text-muted-foreground">Sign in to access your dashboard and health history.</p>
+            <p className="text-muted-foreground">Sign in to your account.</p>
         </div>
         
         <div className="bg-card p-8 rounded-lg shadow-lg">
@@ -268,5 +280,3 @@ export default function LoginPage() {
     </div>
   );
 }
-
-    

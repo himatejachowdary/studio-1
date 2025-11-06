@@ -68,6 +68,11 @@ export default function SignupPage() {
   const handleSignupSubmit = async ({ email, password }: SignupFormValues) => {
     setIsLoading(true);
     setError(null);
+    if (!auth) {
+        setError("Authentication service is not available.");
+        setIsLoading(false);
+        return;
+    }
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       await sendEmailVerification(userCredential.user);
@@ -87,6 +92,11 @@ export default function SignupPage() {
   const handleGoogleSignIn = async () => {
     setIsLoading(true);
     setError(null);
+    if (!auth) {
+        setError("Authentication service is not available.");
+        setIsLoading(false);
+        return;
+    }
     try {
       const provider = new GoogleAuthProvider();
       await signInWithRedirect(auth, provider);
@@ -111,7 +121,7 @@ export default function SignupPage() {
                     SymptoScan
                 </h1>
             </Link>
-            <p className="text-muted-foreground">Create an account to start your health analysis journey.</p>
+            <p className="text-muted-foreground">Create an account to get started.</p>
         </div>
         
         <div className="bg-card p-8 rounded-lg shadow-lg">

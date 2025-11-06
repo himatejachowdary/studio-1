@@ -41,9 +41,13 @@ export default function ForgotPasswordPage() {
     setIsLoading(true);
     setError(null);
     try {
-      await sendPasswordResetEmail(auth, email);
-      setEmailSent(true);
-      toast({ title: 'Success!', description: 'A password reset link has been sent to your email.' });
+      if (auth) {
+        await sendPasswordResetEmail(auth, email);
+        setEmailSent(true);
+        toast({ title: 'Success!', description: 'A password reset link has been sent to your email.' });
+      } else {
+        throw new Error('Auth service not available');
+      }
     } catch (err: any) {
       let friendlyMessage = 'An error occurred. Please try again.';
       if (err.code === 'auth/user-not-found') {

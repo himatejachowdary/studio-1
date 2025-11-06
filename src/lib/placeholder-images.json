@@ -1,16 +1,3 @@
 {
-  "placeholderImages": [
-    {
-      "id": "hero-doctor",
-      "description": "A doctor smiling kindly in a modern clinic.",
-      "imageUrl": "https://images.unsplash.com/photo-1662997777051-f50b550bff53?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxkb2N0b3IlMjBjbGluaWN8ZW58MHx8fHwxNzYxNjY3NDMzfDA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "doctor clinic"
-    },
-    {
-      "id": "map-background",
-      "description": "A stylized map background.",
-      "imageUrl": "https://images.unsplash.com/photo-1718498576154-2ee55bd2a66b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxtYXAlMjBhYnN0cmFjdHxlbnwwfHx8fDE3NjE2MzcyNTd8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "map abstract"
-    }
-  ]
+  "placeholderImages": []
 }
