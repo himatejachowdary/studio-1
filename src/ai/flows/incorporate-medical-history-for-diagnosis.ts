@@ -44,7 +44,7 @@ const prompt = ai.definePrompt({
   output: {
     schema: IncorporateMedicalHistoryForDiagnosisOutputSchema,
   },
-  model: 'gemini-pro',
+  model: 'googleai/gemini-pro',
   prompt: `You are a medical professional who provides possible conditions based on symptoms and medical history.
 
   Symptoms: {{{symptoms}}}
