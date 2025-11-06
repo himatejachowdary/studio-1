@@ -8,6 +8,7 @@ import { DoctorRecommendations } from '@/components/doctor-recommendations';
 import { getAnalysis, saveDiagnosis, findNearbyDoctors } from '@/lib/actions';
 import type { AnalysisInput, AnalysisResult } from '@/lib/types';
 import { AnimatePresence, motion } from 'framer-motion';
+import { Button } from '@/components/ui/button';
 
 type DashboardState = 'idle' | 'analyzing' | 'results';
 
