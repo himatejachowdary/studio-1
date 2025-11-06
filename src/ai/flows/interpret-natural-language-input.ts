@@ -28,7 +28,7 @@ const InterpretNaturalLanguageInputOutputSchema = z.object({
     .describe('A list of extracted symptoms from the input.'),
   summary: z
     .string()
-    describes('A concise summary of the interpreted symptoms.'),
+    .describe('A concise summary of the interpreted symptoms.'),
 });
 export type InterpretNaturalLanguageInputOutput = z.infer<
   typeof InterpretNaturalLanguageInputOutputSchema
@@ -44,6 +44,7 @@ const prompt = ai.definePrompt({
   name: 'interpretNaturalLanguageInputPrompt',
   input: {schema: InterpretNaturalLanguageInputInputSchema},
   output: {schema: InterpretNaturalLanguageInputOutputSchema},
+  model: 'gemini-1.5-flash-001',
   prompt: `You are a medical assistant. Please read the following symptoms provided by the user and return them as structured data.
 
 Symptoms: {{{symptoms}}}

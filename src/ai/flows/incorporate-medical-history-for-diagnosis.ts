@@ -44,6 +44,7 @@ const prompt = ai.definePrompt({
   output: {
     schema: IncorporateMedicalHistoryForDiagnosisOutputSchema,
   },
+  model: 'gemini-1.5-flash-001',
   prompt: `You are a medical professional who provides possible conditions based on symptoms and medical history.
 
   Symptoms: {{{symptoms}}}
