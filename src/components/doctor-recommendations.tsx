@@ -29,21 +29,21 @@ import {
   HeartPulse,
 } from 'lucide-react';
 import type { NearbyDoctorResult, Doctor } from '@/lib/types';
-import { MapView } from './map-view';
+
 
 const DoctorCard = ({ doctor }: { doctor: Doctor }) => (
     <Card>
       <CardHeader>
         <CardTitle className="text-lg flex items-center justify-between">
             <span className='flex items-center gap-2'><User /> {doctor.name}</span>
-            {doctor.rating > 0 && <Badge variant="secondary" className="flex items-center gap-1">
+            {doctor.rating && doctor.rating > 0 && <Badge variant="secondary" className="flex items-center gap-1">
                 <Star className="w-3 h-3 text-yellow-400" /> {doctor.rating}
             </Badge>}
         </CardTitle>
-        <CardDescription>{doctor.specialty}</CardDescription>
+        {doctor.specialty && <CardDescription>{doctor.specialty}</CardDescription>}
       </CardHeader>
       <CardContent className="text-sm space-y-2">
-        <p className="flex items-start gap-2"><MapPin className="w-4 h-4 mt-1 flex-shrink-0"/> {doctor.address}</p>
+        {doctor.address && <p className="flex items-start gap-2"><MapPin className="w-4 h-4 mt-1 flex-shrink-0"/> {doctor.address}</p>}
         {doctor.phone && <p className="flex items-center gap-2"><Phone className="w-4 h-4"/> <a href={`tel:${doctor.phone}`} className="text-primary hover:underline">{doctor.phone}</a></p>}
         {doctor.website && <p className="flex items-center gap-2"><Globe className="w-4 h-4"/> <a href={doctor.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline truncate">{doctor.website}</a></p>}
       </CardContent>
@@ -54,7 +54,11 @@ export function DoctorRecommendations({
   specialty,
   onEmergencyClick,
   findNearbyDoctorsAction,
-}: DoctorRecommendationsProps) {
+}: {
+    specialty: string;
+    onEmergencyClick: () => void;
+    findNearbyDoctorsAction: (specialty: string, lat: number, lng: number) => Promise<NearbyDoctorResult>;
+}) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [results, setResults] = useState<NearbyDoctorResult | null>(null);
@@ -98,18 +102,6 @@ export function DoctorRecommendations({
         });
     }
   }, [userLocation, specialty, findNearbyDoctorsAction]);
-
-  const markers = useMemo(() => {
-    if (!results) return [];
-    // Ensure we have location data before creating markers with pseudo-locations
-    if (!userLocation) return [];
-
-    const doctorMarkers = results.doctors.map(d => ({ key: d.name, label: d.name, specialty: d.specialty, lat: userLocation.lat, lng: userLocation.lng }));
-    const hospitalMarkers = results.hospitals.map(h => ({ key: h.name, label: h.name, specialty: "Hospital", lat: userLocation.lat, lng: userLocation.lng }));
-    
-    return [...doctorMarkers, ...hospitalMarkers];
-  }, [results, userLocation]);
-
 
   const renderContent = () => {
     if (isLoading && !results) { // Only show initial loader if there are no stale results
@@ -178,7 +170,6 @@ export function DoctorRecommendations({
         {isLoading && <Loader className="animate-spin text-primary" />}
       </CardHeader>
       <CardContent className="space-y-4">
-        {userLocation && <MapView lat={userLocation.lat} lng={userLocation.lng} markers={markers} />}
         {renderContent()}
       </CardContent>
       <CardContent>

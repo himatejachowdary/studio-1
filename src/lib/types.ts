@@ -20,9 +20,9 @@ export type Diagnosis = AnalysisInput & AnalysisResult & {
 export type Doctor = {
     name: string;
     specialty: string;
-    address: string;
-    phone: string;
-    rating: number;
+    address?: string;
+    phone?: string;
+    rating?: number;
     website?: string;
 };
 

@@ -60,9 +60,9 @@ const FindDoctorsInputSchema = z.object({
 const DoctorSchema = z.object({
   name: z.string(),
   specialty: z.string(),
-  address: z.string(),
-  phone: z.string(),
-  rating: z.number(),
+  address: z.string().optional(),
+  phone: z.string().optional(),
+  rating: z.number().optional(),
   website: z.string().optional(),
 });
 
@@ -80,9 +80,12 @@ export const findNearbyDoctorsFlow = ai.defineFlow(
     outputSchema: FindDoctorsOutputSchema,
   },
   async ({ specialty, latitude, longitude }) => {
-    const prompt = `You are a helpful medical directory assistant. Find 5 highly-rated doctors and 3 hospitals near the user's location for the given specialty. The user is at latitude ${latitude} and longitude ${longitude}. The specialty they need is: ${specialty}.
-
-Return the results in the specified JSON format. For each doctor and hospital, provide the name, specialty, full address, phone number, and a numerical rating. If a website is available, include it.`;
+    const prompt =
+      specialty === 'Hospital'
+        ? `You are a helpful emergency directory assistant. Find 5 highly-rated hospitals near the user's location. The user is at latitude ${latitude} and longitude ${longitude}.
+           Return ONLY a list of hospital names and their phone numbers in the specified JSON format.`
+        : `You are a helpful medical directory assistant. Find 5 highly-rated doctors for the specialty "${specialty}" and 3 hospitals near the user's location. The user is at latitude ${latitude} and longitude ${longitude}.
+           Return the results in the specified JSON format. For each doctor and hospital, provide the name, specialty, full address, phone number, and a numerical rating. If a website is available, include it.`;
 
     const { output } = await ai.generate({
       model: 'gemini-1.5-flash',
