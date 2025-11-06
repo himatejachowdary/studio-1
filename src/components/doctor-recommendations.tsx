@@ -31,30 +31,20 @@ import {
 import type { NearbyDoctorResult, Doctor } from '@/lib/types';
 import { MapView } from './map-view';
 
-type DoctorRecommendationsProps = {
-  specialty: string;
-  onEmergencyClick: () => void;
-  findNearbyDoctorsAction: (
-    specialty: string,
-    lat: number,
-    lng: number
-  ) => Promise<NearbyDoctorResult>;
-};
-
 const DoctorCard = ({ doctor }: { doctor: Doctor }) => (
     <Card>
       <CardHeader>
         <CardTitle className="text-lg flex items-center justify-between">
             <span className='flex items-center gap-2'><User /> {doctor.name}</span>
-            <Badge variant="secondary" className="flex items-center gap-1">
+            {doctor.rating > 0 && <Badge variant="secondary" className="flex items-center gap-1">
                 <Star className="w-3 h-3 text-yellow-400" /> {doctor.rating}
-            </Badge>
+            </Badge>}
         </CardTitle>
         <CardDescription>{doctor.specialty}</CardDescription>
       </CardHeader>
       <CardContent className="text-sm space-y-2">
         <p className="flex items-start gap-2"><MapPin className="w-4 h-4 mt-1 flex-shrink-0"/> {doctor.address}</p>
-        <p className="flex items-center gap-2"><Phone className="w-4 h-4"/> {doctor.phone}</p>
+        {doctor.phone && <p className="flex items-center gap-2"><Phone className="w-4 h-4"/> <a href={`tel:${doctor.phone}`} className="text-primary hover:underline">{doctor.phone}</a></p>}
         {doctor.website && <p className="flex items-center gap-2"><Globe className="w-4 h-4"/> <a href={doctor.website} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline truncate">{doctor.website}</a></p>}
       </CardContent>
     </Card>
@@ -71,6 +61,7 @@ export function DoctorRecommendations({
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   
   useEffect(() => {
+    // This effect runs once to get the user's location.
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -91,6 +82,7 @@ export function DoctorRecommendations({
   }, []);
 
   useEffect(() => {
+    // This effect runs when the location or specialty changes.
     if (userLocation && specialty) {
       setIsLoading(true);
       setError(null);
@@ -109,18 +101,22 @@ export function DoctorRecommendations({
 
   const markers = useMemo(() => {
     if (!results) return [];
-    const doctorMarkers = results.doctors.map(d => ({ key: d.name, label: d.name, specialty: d.specialty }));
-    const hospitalMarkers = results.hospitals.map(h => ({ key: h.name, label: h.name, specialty: "Hospital" }));
+    // Ensure we have location data before creating markers with pseudo-locations
+    if (!userLocation) return [];
+
+    const doctorMarkers = results.doctors.map(d => ({ key: d.name, label: d.name, specialty: d.specialty, lat: userLocation.lat, lng: userLocation.lng }));
+    const hospitalMarkers = results.hospitals.map(h => ({ key: h.name, label: h.name, specialty: "Hospital", lat: userLocation.lat, lng: userLocation.lng }));
+    
     return [...doctorMarkers, ...hospitalMarkers];
-  }, [results]);
+  }, [results, userLocation]);
 
 
   const renderContent = () => {
-    if (isLoading) {
+    if (isLoading && !results) { // Only show initial loader if there are no stale results
       return (
         <div className="flex flex-col items-center justify-center gap-3 text-muted-foreground p-8">
           <Loader className="animate-spin" />
-          <p>Finding nearby doctors for "{specialty}"...</p>
+          <p>Finding nearby {specialty.toLowerCase() === 'hospital' ? 'hospitals' : `doctors for "${specialty}"`}...</p>
         </div>
       );
     }
@@ -148,21 +144,21 @@ export function DoctorRecommendations({
     }
 
     return (
-        <Tabs defaultValue="doctors">
+        <Tabs defaultValue={specialty === 'Hospital' ? "hospitals" : "doctors"}>
             <div className='px-6'>
                 <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="doctors"><Stethoscope />Doctors ({results.doctors.length})</TabsTrigger>
-                    <TabsTrigger value="hospitals"><Building />Hospitals ({results.hospitals.length})</TabsTrigger>
+                    <TabsTrigger value="doctors" disabled={results.doctors.length === 0}><Stethoscope />Doctors ({results.doctors.length})</TabsTrigger>
+                    <TabsTrigger value="hospitals" disabled={results.hospitals.length === 0}><Building />Hospitals ({results.hospitals.length})</TabsTrigger>
                 </TabsList>
             </div>
             <TabsContent value="doctors" className="p-2 pt-0 md:p-6 md:pt-0">
                 <div className='grid gap-4 md:grid-cols-2'>
-                    {results.doctors.map((doctor, index) => <DoctorCard key={index} doctor={doctor} />)}
+                    {results.doctors.length > 0 ? results.doctors.map((doctor, index) => <DoctorCard key={`doc-${index}`} doctor={doctor} />) : <p className='text-muted-foreground text-center col-span-2 p-4'>No doctors found for this specialty.</p>}
                 </div>
             </TabsContent>
             <TabsContent value="hospitals" className="p-2 pt-0 md:p-6 md:pt-0">
                 <div className='grid gap-4 md:grid-cols-2'>
-                    {results.hospitals.map((hospital, index) => <DoctorCard key={index} doctor={hospital} />)}
+                     {results.hospitals.length > 0 ? results.hospitals.map((hospital, index) => <DoctorCard key={`hosp-${index}`} doctor={hospital} />) : <p className='text-muted-foreground text-center col-span-2 p-4'>No hospitals found.</p>}
                 </div>
             </TabsContent>
       </Tabs>
@@ -171,11 +167,15 @@ export function DoctorRecommendations({
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Doctor & Hospital Recommendations</CardTitle>
-        <CardDescription>
-          Here are AI-powered recommendations for the specialty: <Badge>{specialty}</Badge>
-        </CardDescription>
+      <CardHeader className='flex-row justify-between items-center'>
+        <div>
+            <CardTitle>Doctor & Hospital Recommendations</CardTitle>
+            <CardDescription>
+            {specialty !== 'Hospital' && <>Recommendations for the specialty: <Badge>{specialty}</Badge></>}
+            {specialty === 'Hospital' && <>Displaying nearby hospitals for emergency.</>}
+            </CardDescription>
+        </div>
+        {isLoading && <Loader className="animate-spin text-primary" />}
       </CardHeader>
       <CardContent className="space-y-4">
         {userLocation && <MapView lat={userLocation.lat} lng={userLocation.lng} markers={markers} />}

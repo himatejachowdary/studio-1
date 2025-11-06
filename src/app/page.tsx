@@ -57,6 +57,21 @@ export default function Home() {
     router.push('/login');
   };
 
+  // This will be passed down to SymptoScanDashboard and then to the Header
+  const handleSos = () => {
+    // If a user isn't logged in, they can't save history, but we can still show hospitals.
+    // For simplicity, we'll just reuse the logged-in dashboard's logic.
+    // We can't directly trigger the dashboard's state, so we'll pass a prop.
+    // A query param is a good way to signal an initial state.
+    const targetUrl = user ? '/?sos=true' : '/login?sos=true';
+    if(window.location.search.includes('sos=true')) {
+      // If we are already in SOS mode, reload to re-trigger the effect in the dashboard
+      window.location.reload();
+    } else {
+       router.push(targetUrl);
+    }
+  }
+
   if (isUserLoading) {
     return (
        <div className="flex items-center justify-center min-h-screen flex-col gap-4">
@@ -69,7 +84,7 @@ export default function Home() {
   return (
     <>
       <div className="flex flex-col min-h-screen">
-        <Header isLoggedIn={!!user} onLogin={handleLogin} onLogout={handleLogout} />
+        <Header isLoggedIn={!!user} onLogin={handleLogin} onLogout={handleLogout} onSosClick={handleSos} />
         <main className="flex-1">
           {user ? (
             <SymptoScanDashboard user={user}/>
@@ -80,6 +95,7 @@ export default function Home() {
         <footer className="py-6 px-4 md:px-8 border-t">
           <div className="container mx-auto text-center text-sm text-muted-foreground">
             <p>&copy; {new Date().getFullYear()} SymptoScan. All rights reserved.</p>
+            <p className="text-xs mt-2">Disclaimer: This tool is for informational purposes only and is not a substitute for professional medical advice.</p>
           </div>
         </footer>
       </div>

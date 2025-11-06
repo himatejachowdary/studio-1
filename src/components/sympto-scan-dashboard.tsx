@@ -1,6 +1,7 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { User } from 'firebase/auth';
+import { useSearchParams } from 'next/navigation';
 import { SymptomAnalyzer } from '@/components/symptom-analyzer';
 import { AnalysisResults } from '@/components/analysis-results';
 import { DoctorRecommendations } from '@/components/doctor-recommendations';
@@ -15,6 +16,15 @@ export function SymptoScanDashboard({ user }: { user: User }) {
   const [analysisInput, setAnalysisInput] = useState<AnalysisInput | null>(null);
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
   const [recommendationSpecialty, setRecommendationSpecialty] = useState<string>('');
+  
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get('sos') === 'true') {
+        handleEmergencyClick();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   const handleAnalysisStart = () => {
     setState('analyzing');
@@ -40,6 +50,10 @@ export function SymptoScanDashboard({ user }: { user: User }) {
   };
   
   const handleStartNewAnalysis = () => {
+    // Clear sos param from url
+    const newUrl = window.location.pathname;
+    window.history.replaceState({...window.history.state, as: newUrl, url: newUrl}, '', newUrl);
+    
     setState('idle');
     setAnalysisResult(null);
     setAnalysisInput(null);

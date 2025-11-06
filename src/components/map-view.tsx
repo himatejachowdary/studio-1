@@ -7,7 +7,7 @@ const API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || '';
 type MapViewProps = {
     lat: number;
     lng: number;
-    markers: { key: string; label: string; specialty: string }[];
+    markers: { key: string; label: string; specialty: string; lat: number; lng: number }[];
 };
 
 export function MapView({ lat, lng, markers }: MapViewProps) {
@@ -36,7 +36,7 @@ export function MapView({ lat, lng, markers }: MapViewProps) {
                     </AdvancedMarker>
 
                     {/* Doctor/Hospital markers */}
-                    {markers.map(({ key, label, specialty }) => {
+                    {markers.map(({ key, label, specialty, lat, lng }) => {
                         // A simple hash function to generate a semi-random position offset
                         const hash = key.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
                         const offsetLat = (hash % 100 - 50) * 0.0005; // ~55m

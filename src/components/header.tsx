@@ -1,4 +1,6 @@
-import { Stethoscope, LogIn, LogOut, History, Shield } from 'lucide-react';
+'use client';
+
+import { Stethoscope, LogIn, LogOut, History, Shield, Siren } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 
@@ -6,9 +8,10 @@ type HeaderProps = {
   isLoggedIn: boolean;
   onLogin: () => void;
   onLogout: () => void;
+  onSosClick: () => void;
 };
 
-export function Header({ isLoggedIn, onLogin, onLogout }: HeaderProps) {
+export function Header({ isLoggedIn, onLogin, onLogout, onSosClick }: HeaderProps) {
   return (
     <header className="py-4 px-4 md:px-8 flex justify-between items-center bg-background/80 backdrop-blur-sm sticky top-0 z-40 border-b">
       <div className="flex items-center gap-3">
@@ -20,6 +23,10 @@ export function Header({ isLoggedIn, onLogin, onLogout }: HeaderProps) {
         </Link>
       </div>
       <div className="flex items-center gap-2">
+        <Button onClick={onSosClick} variant="destructive">
+            <Siren className="mr-2 h-4 w-4" />
+            SOS
+        </Button>
         {isLoggedIn ? (
           <>
             <Button asChild variant="ghost" size="sm">
