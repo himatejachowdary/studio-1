@@ -1,0 +1,277 @@
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user of the SymptoScan application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the user."
+        },
+        "email": {
+          "type": "string",
+          "description": "User's email address.",
+          "format": "email"
+        },
+        "firstName": {
+          "type": "string",
+          "description": "User's first name."
+        },
+        "lastName": {
+          "type": "string",
+          "description": "User's last name."
+        },
+        "medicalHistoryId": {
+          "type": "string",
+          "description": "Reference to the user's MedicalHistory. (Relationship: User 1:1 MedicalHistory)"
+        }
+      },
+      "required": [
+        "id",
+        "email",
+        "firstName",
+        "lastName"
+      ]
+    },
+    "MedicalHistory": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "MedicalHistory",
+      "type": "object",
+      "description": "Represents the medical history of a user.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the medical history entry."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the User. (Relationship: User 1:1 MedicalHistory)"
+        },
+        "conditions": {
+          "type": "string",
+          "description": "A textual representation of the user's known medical conditions."
+        },
+        "medications": {
+          "type": "string",
+          "description": "A textual representation of the user's current medications."
+        },
+        "allergies": {
+          "type": "string",
+          "description": "A textual representation of the user's known allergies."
+        },
+        "notes": {
+          "type": "string",
+          "description": "Additional notes or comments about the user's medical history."
+        }
+      },
+      "required": [
+        "id",
+        "userId"
+      ]
+    },
+    "Diagnosis": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Diagnosis",
+      "type": "object",
+      "description": "Represents a diagnosis suggestion based on user input.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the diagnosis."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to the User who received this diagnosis. (Relationship: User 1:N Diagnosis)"
+        },
+        "condition": {
+          "type": "string",
+          "description": "The suggested medical condition."
+        },
+        "confidenceLevel": {
+          "type": "number",
+          "description": "A numerical value representing the confidence level of the diagnosis suggestion."
+        },
+        "timestamp": {
+          "type": "string",
+          "description": "Timestamp indicating when the diagnosis was made.",
+          "format": "date-time"
+        }
+      },
+      "required": [
+        "id",
+        "userId",
+        "condition",
+        "confidenceLevel",
+        "timestamp"
+      ]
+    },
+    "Doctor": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Doctor",
+      "type": "object",
+      "description": "Represents a doctor in the system.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the doctor."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the doctor."
+        },
+        "specialty": {
+          "type": "string",
+          "description": "The doctor's medical specialty."
+        },
+        "location": {
+          "type": "string",
+          "description": "The doctor's office location (e.g., address)."
+        },
+        "contactNumber": {
+          "type": "string",
+          "description": "The doctor's contact phone number."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "specialty",
+        "location"
+      ]
+    },
+    "DoctorRecommendation": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "DoctorRecommendation",
+      "type": "object",
+      "description": "Represents a recommendation of a doctor for a particular diagnosis.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the doctor recommendation."
+        },
+        "diagnosisId": {
+          "type": "string",
+          "description": "Reference to the Diagnosis for which the doctor is recommended. (Relationship: Diagnosis 1:N DoctorRecommendation)"
+        },
+        "doctorId": {
+          "type": "string",
+          "description": "Reference to the Doctor who is being recommended. (Relationship: Doctor 1:N DoctorRecommendation)"
+        },
+        "reason": {
+          "type": "string",
+          "description": "Reason for recommending this particular doctor."
+        }
+      },
+      "required": [
+        "id",
+        "diagnosisId",
+        "doctorId"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user profiles. Access control is based on path-based ownership: only the user with the matching ID can access their profile.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/medicalHistories/{medicalHistoryId}",
+        "definition": {
+          "entityName": "MedicalHistory",
+          "schema": {
+            "$ref": "#/backend/entities/MedicalHistory"
+          },
+          "description": "Stores medical histories for each user. Access control is based on path-based ownership: only the user with the matching ID can access their medical history.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            },
+            {
+              "name": "medicalHistoryId",
+              "description": "The unique identifier for the medical history entry."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/diagnoses/{diagnosisId}",
+        "definition": {
+          "entityName": "Diagnosis",
+          "schema": {
+            "$ref": "#/backend/entities/Diagnosis"
+          },
+          "description": "Stores diagnoses associated with each user. Access control is based on path-based ownership: only the user with the matching ID can access their diagnoses.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier for the user."
+            },
+            {
+              "name": "diagnosisId",
+              "description": "The unique identifier for the diagnosis."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/doctors/{doctorId}",
+        "definition": {
+          "entityName": "Doctor",
+          "schema": {
+            "$ref": "#/backend/entities/Doctor"
+          },
+          "description": "Stores doctor profiles. Public read access is allowed, but write access is restricted to authorized personnel.",
+          "params": [
+            {
+              "name": "doctorId",
+              "description": "The unique identifier for the doctor."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/diagnoses/{diagnosisId}/doctorRecommendations/{doctorRecommendationId}",
+        "definition": {
+          "entityName": "DoctorRecommendation",
+          "schema": {
+            "$ref": "#/backend/entities/DoctorRecommendation"
+          },
+          "description": "Stores doctor recommendations related to diagnoses.  Even though diagnoses are owned by the user (as denoted in the schema), this path is used for simplicity, with appropriate validation rules. Access control is based on the recommendation and diagnosis IDs.",
+          "params": [
+            {
+              "name": "diagnosisId",
+              "description": "The unique identifier for the diagnosis."
+            },
+            {
+              "name": "doctorRecommendationId",
+              "description": "The unique identifier for the doctor recommendation."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to ensure Authorization Independence, support the application's core features, and adhere to the specified design principles. User data and related entities (MedicalHistory, Diagnoses, and DoctorRecommendations) are organized under user-specific paths to enforce clear ownership and simplify security rules.\n\n*   **Authorization Independence:** The structure achieves authorization independence by using path-based ownership for user-related data. Each user's data (medical history, diagnoses, and doctor recommendations) is stored under the `/users/{userId}` path, eliminating the need for `get()` calls in security rules. This enables atomic operations and simplifies debugging.\n*   **QAPs (Queries are not filters):**\n    *   For User-owned data (MedicalHistory, Diagnoses), path-based ownership (`/users/{userId}/{entity}`) is used. This enables secure `list` operations as rules can easily check `request.auth.uid == userId`.\n\n    *   Doctors are stored in a root-level collection, allowing for public listing without authorization concerns.\n\n**Explanation of Paths:**\n\n*   `/users/{userId}`: Stores user profiles.  Security rules will ensure only the authenticated user (or potentially an admin role - implemented via a separate roles collection) can access their own profile. Access control is achieved through direct path matching.\n*   `/users/{userId}/medicalHistories/{medicalHistoryId}`: Stores medical history for each user. By nesting medical histories under the user ID, we ensure that only the authenticated user can access their own medical history.\n*   `/users/{userId}/diagnoses/{diagnosisId}`: Stores diagnoses associated with each user. This structure follows the same principle of path-based ownership as the medical history, ensuring data privacy and simplifying security rules.\n*   `/doctors/{doctorId}`: Stores doctor profiles. This collection is at the root level because doctors are considered globally accessible entities. The security rules will allow read access to anyone, but only authorized personnel can create, update, or delete doctors.\n*   `/diagnoses/{diagnosisId}/doctorRecommendations/{doctorRecommendationId}`: Stores doctor recommendations related to diagnoses.  Even though `diagnoses` are owned by the user (as denoted in the schema), this path is used for simplicity, with appropriate validation rules.\n\n**Denormalization:**\n\nThere are no membership maps because collaborative features were not included in the prompt. If there were collaborative features, the structure would denormalize relevant attributes (e.g., `members: {uid: role}`) into subcollections to avoid `get()` calls in security rules."
+  }
+}
