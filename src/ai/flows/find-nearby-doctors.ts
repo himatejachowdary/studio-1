@@ -38,6 +38,7 @@ export async function findNearbyDoctors(
 
 const prompt = ai.definePrompt({
   name: 'findNearbyDoctorsPrompt',
+  model: 'gemini-pro',
   input: {schema: FindNearbyDoctorsInputSchema},
   output: {schema: FindNearbyDoctorsOutputSchema},
   prompt: `You are a helpful assistant that finds doctors and hospitals.
