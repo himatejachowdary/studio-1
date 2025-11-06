@@ -56,7 +56,7 @@ export async function analyzeSymptomsAndSuggestConditions(
 
 const prompt = ai.definePrompt({
   name: 'analyzeSymptomsAndSuggestConditionsPrompt',
-  model: 'models/gemini-1.5-flash',
+  model: 'gemini-1.5-flash-preview',
   input: {schema: AnalyzeSymptomsAndSuggestConditionsInputSchema},
   output: {schema: AnalyzeSymptomsAndSuggestConditionsOutputSchema},
   prompt: `You are an AI-powered medical assistant that analyzes symptoms
