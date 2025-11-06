@@ -2,7 +2,6 @@ import type {Metadata} from 'next';
 import './globals.css';
 import { cn } from "@/lib/utils"
 import { Toaster } from "@/components/ui/toaster"
-import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { Alegreya, Belleza } from 'next/font/google';
 
 const belleza = Belleza({
@@ -17,8 +16,8 @@ const alegreya = Alegreya({
 });
 
 export const metadata: Metadata = {
-  title: 'SymptoScan',
-  description: 'AI-powered symptom analysis and doctor recommendations',
+  title: 'Direct-to-Gemini',
+  description: 'A simple interface to chat with Gemini',
 };
 
 export default function RootLayout({
@@ -30,9 +29,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head />
       <body className={cn("min-h-screen bg-background font-body antialiased", belleza.variable, alegreya.variable)}>
-        <FirebaseClientProvider>
           {children}
-        </FirebaseClientProvider>
         <Toaster />
       </body>
     </html>
