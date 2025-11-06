@@ -44,5 +44,3 @@ export const analyzeSymptomsAndSuggestConditions = ai.defineFlow(
     return result.output!;
   }
 );
-
-export type { Analysis } from '@/lib/types';

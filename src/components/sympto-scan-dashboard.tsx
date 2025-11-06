@@ -7,6 +7,7 @@ import DoctorRecommendations from './doctor-recommendations';
 import { Analysis, Doctor } from '@/lib/types';
 import { findNearbyDoctors } from '@/lib/actions';
 import { Loader2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 type AppState = 'idle' | 'analyzing' | 'analysis_complete' | 'finding_doctors' | 'doctors_found';
 
@@ -14,19 +15,21 @@ const SymptoScanDashboard = () => {
   const [state, setState] = useState<AppState>('idle');
   const [analysis, setAnalysis] = useState<Analysis | null>(null);
   const [doctors, setDoctors] = useState<Doctor[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const { toast } = useToast();
 
   const handleAnalysisComplete = (analysis: Analysis) => {
     setAnalysis(analysis);
     setState('analysis_complete');
-    setError(null);
   };
 
   const handleFindDoctors = async (specialty: string) => {
     setState('finding_doctors');
-    setError(null);
     
-    // Get user's location
+    if (!navigator.geolocation) {
+      handleError('Geolocation is not supported by your browser.');
+      return;
+    }
+
     navigator.geolocation.getCurrentPosition(
       async (position) => {
         const { latitude, longitude } = position.coords;
@@ -35,18 +38,23 @@ const SymptoScanDashboard = () => {
           setDoctors(foundDoctors);
           setState('doctors_found');
         } catch (err: any) {
-            handleAnalysisError(err.message);
+            handleError(err.message);
         }
       },
       (error) => {
-        handleAnalysisError('Could not get location. Please enable location services.');
+        handleError('Could not get location. Please enable location services in your browser settings.');
       }
     );
   };
   
-  const handleAnalysisError = (error: string) => {
-    console.error('Analysis error:', error);
-    setState('idle'); // Or a new 'error' state
+  const handleError = (errorMessage: string) => {
+    console.error('Error:', errorMessage);
+    toast({
+      variant: 'destructive',
+      title: 'An error occurred',
+      description: errorMessage,
+    });
+    setState(analysis ? 'analysis_complete' : 'idle');
   };
   
 
@@ -54,7 +62,6 @@ const SymptoScanDashboard = () => {
     setState('idle');
     setAnalysis(null);
     setDoctors(null);
-    setError(null);
   };
 
   return (
@@ -70,7 +77,7 @@ const SymptoScanDashboard = () => {
             <SymptomAnalyzer
               onAnalysisStart={() => setState('analyzing')}
               onAnalysisComplete={handleAnalysisComplete}
-              onAnalysisError={handleAnalysisError}
+              onAnalysisError={handleError}
             />
           </motion.div>
         )}
@@ -107,7 +114,7 @@ const SymptoScanDashboard = () => {
                 <DoctorRecommendations doctors={doctors} />
             )}
              <div className="text-center mt-8">
-                <button className="text-primary hover:underline" onClick={handleStartNewAnalysis}>Start New Analysis</button>
+                <Button variant="link" onClick={handleStartNewAnalysis}>Start New Analysis</Button>
             </div>
           </motion.div>
         )}

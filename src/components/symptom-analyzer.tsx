@@ -1,5 +1,4 @@
 'use client';
-import { useState } from 'react';
 import { z } from 'zod';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -12,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getAnalysis } from '@/lib/actions';
 import { Analysis } from '@/lib/types';
-import { Calendar, Heart, Pencil, User } from 'lucide-react';
+import { Calendar, Heart, Pencil, User, Stethoscope } from 'lucide-react';
 
 const formSchema = z.object({
   symptoms: z.string().min(10, 'Please describe your symptoms in at least 10 characters.'),
@@ -48,8 +47,9 @@ const SymptomAnalyzer = ({ onAnalysisStart, onAnalysisComplete, onAnalysisError 
 
   return (
     <Card className="w-full shadow-lg border-0">
-      <CardHeader className="text-center">
-        <CardTitle className="text-3xl font-serif">Symptom Analyzer</CardTitle>
+      <CardHeader className="text-center items-center">
+        <Stethoscope className="w-12 h-12 text-primary mb-2"/>
+        <CardTitle className="text-3xl font-serif">SymptoScan AI</CardTitle>
         <CardDescription>Describe your symptoms, and our AI will provide a preliminary analysis.</CardDescription>
       </CardHeader>
       <CardContent>

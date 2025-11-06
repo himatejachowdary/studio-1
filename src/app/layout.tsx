@@ -3,7 +3,6 @@ import './globals.css';
 import { cn } from "@/lib/utils"
 import { Toaster } from "@/components/ui/toaster"
 import { Inter, Lexend } from 'next/font/google';
-import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 const fontSans = Inter({
   subsets: ['latin'],
@@ -30,9 +29,7 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <head />
       <body className={cn("min-h-screen bg-background font-sans antialiased", fontSans.variable, fontSerif.variable)}>
-        <FirebaseClientProvider>
           {children}
-        </FirebaseClientProvider>
         <Toaster />
       </body>
     </html>
