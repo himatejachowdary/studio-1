@@ -15,9 +15,11 @@ export type Analysis = z.infer<typeof analysisSchema>;
 
 export const doctorSchema = z.object({
   name: z.string(),
+  specialty: z.string().optional(),
   address: z.string(),
   phone: z.string().optional(),
   website: z.string().optional(),
   rating: z.number().optional(),
+  distance: z.string().optional(),
 });
 export type Doctor = z.infer<typeof doctorSchema>;

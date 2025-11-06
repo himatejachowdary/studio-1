@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Analysis } from '@/lib/types';
-import { AlertCircle, Bot } from 'lucide-react';
+import { AlertCircle, Bot, Search } from 'lucide-react';
 
 type SymptomAnalysisProps = {
   analysis: Analysis;
@@ -41,11 +41,11 @@ const SymptomAnalysis = ({ analysis, onFindDoctors, isFindingDoctors }: SymptomA
             ))}
           </div>
         </div>
-         <div className="p-4 bg-blue-50 border-l-4 border-blue-400 text-blue-800 rounded-r-lg">
+         <div className="p-4 bg-primary/10 border-l-4 border-primary text-primary-foreground rounded-r-lg">
             <div className="flex items-center gap-3">
-                <h3 className="font-semibold text-lg">Recommended Specialist</h3>
+                <h3 className="font-semibold text-lg text-primary">Recommended Specialist</h3>
             </div>
-            <p className="mt-2 text-2xl font-bold">{analysis.recommendedSpecialty}</p>
+            <p className="mt-1 text-2xl font-bold text-primary">{analysis.recommendedSpecialty}</p>
         </div>
 
         <div className="p-4 bg-yellow-50 border-l-4 border-yellow-400 text-yellow-800 rounded-r-lg">
@@ -60,11 +60,6 @@ const SymptomAnalysis = ({ analysis, onFindDoctors, isFindingDoctors }: SymptomA
           </div>
         </div>
       </CardContent>
-      <CardFooter className="flex justify-end">
-        <Button onClick={() => onFindDoctors(analysis.recommendedSpecialty)} disabled={isFindingDoctors}>
-            {isFindingDoctors ? 'Searching...' : `Find a ${analysis.recommendedSpecialty} Near Me`}
-        </Button>
-      </CardFooter>
     </Card>
   );
 };

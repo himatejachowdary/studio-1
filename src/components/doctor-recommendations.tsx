@@ -1,105 +1,129 @@
 'use client';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { Badge } from './ui/badge';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from './ui/card';
 import { Doctor } from '@/lib/types';
-import { Building, Phone, Star } from 'lucide-react';
+import { Building2, MapPin, ShieldCheck } from 'lucide-react';
 import { Button } from './ui/button';
 import { useEffect, useRef, useState } from 'react';
 import { Loader } from '@googlemaps/js-api-loader';
 
 type DoctorRecommendationsProps = {
   doctors: Doctor[];
+  analysisCondition: string;
 };
 
 const DoctorCard = ({ doctor }: { doctor: Doctor }) => (
-  <Card className="flex flex-col justify-between">
-    <CardHeader>
-      <CardTitle className='text-xl'>{doctor.name}</CardTitle>
-    </CardHeader>
-    <CardContent className="space-y-3">
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Building className='w-4 h-4' />
+  <Card className="bg-primary/5 border-primary/20">
+    <CardContent className="p-4">
+      <div className="flex items-start gap-4">
+        <div className="bg-primary/10 p-3 rounded-lg">
+          <Building2 className="w-6 h-6 text-primary" />
+        </div>
+        <div className="flex-1">
+          <h3 className="text-lg font-bold">{doctor.name}</h3>
+          <p className="text-sm text-muted-foreground">{doctor.specialty}</p>
+          <div className="flex items-start gap-2 mt-2 text-sm text-muted-foreground">
+            <MapPin className="w-4 h-4 mt-0.5 shrink-0" />
             <span>{doctor.address}</span>
+          </div>
         </div>
-        {doctor.phone && (
-             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Phone className='w-4 h-4' />
-                <span>{doctor.phone}</span>
-            </div>
+        {doctor.distance && (
+          <p className="text-sm font-semibold text-primary">{doctor.distance}</p>
         )}
-       {doctor.rating && (
-         <div className="flex items-center gap-1">
-          <Badge variant="secondary">{doctor.rating}</Badge>
-          <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" />
-        </div>
-       )}
+      </div>
     </CardContent>
   </Card>
 );
 
 const MapView = ({ doctors }: { doctors: Doctor[] }) => {
-    const mapRef = useRef<HTMLDivElement>(null);
-    const [map, setMap] = useState<google.maps.Map | null>(null);
+  const mapRef = useRef<HTMLDivElement>(null);
+  const [map, setMap] = useState<google.maps.Map | null>(null);
 
-    useEffect(() => {
-        const loader = new Loader({
-            apiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
-            version: "weekly",
+  useEffect(() => {
+    const loader = new Loader({
+      apiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!,
+      version: 'weekly',
+    });
+
+    loader.load().then(async () => {
+      const { Map } = (await google.maps.importLibrary(
+        'maps'
+      )) as google.maps.MapsLibrary;
+      const geocoder = new google.maps.Geocoder();
+
+      if (mapRef.current) {
+        const newMap = new Map(mapRef.current, {
+          center: { lat: 0, lng: 0 },
+          zoom: 12,
+          disableDefaultUI: true,
         });
+        setMap(newMap);
 
-        loader.load().then(async () => {
-            const { Map } = await google.maps.importLibrary("maps") as google.maps.MapsLibrary;
-            const geocoder = new google.maps.Geocoder();
-            
-            if (mapRef.current) {
-                const newMap = new Map(mapRef.current, {
-                    center: { lat: 0, lng: 0 },
-                    zoom: 12,
-                });
-                setMap(newMap);
+        const bounds = new google.maps.LatLngBounds();
 
-                const bounds = new google.maps.LatLngBounds();
-
-                doctors.forEach(doctor => {
-                    geocoder.geocode({ address: doctor.address }, (results, status) => {
-                        if (status === 'OK' && results) {
-                            new google.maps.Marker({
-                                map: newMap,
-                                position: results[0].geometry.location,
-                                title: doctor.name,
-                            });
-                            bounds.extend(results[0].geometry.location);
-                            newMap.fitBounds(bounds);
-                        }
-                    });
-                });
+        doctors.forEach((doctor) => {
+          geocoder.geocode({ address: doctor.address }, (results, status) => {
+            if (status === 'OK' && results) {
+              new google.maps.Marker({
+                map: newMap,
+                position: results[0].geometry.location,
+                title: doctor.name,
+              });
+              bounds.extend(results[0].geometry.location);
+              newMap.fitBounds(bounds);
             }
+          });
         });
-    }, [doctors]);
+      }
+    });
+  }, [doctors]);
 
-    return <div ref={mapRef} style={{ width: '100%', height: '400px' }} className='rounded-lg shadow-md' />;
+  return (
+    <div
+      ref={mapRef}
+      style={{ width: '100%', height: '300px' }}
+      className="rounded-lg shadow-md"
+    />
+  );
 };
 
-
-const DoctorRecommendations = ({ doctors }: DoctorRecommendationsProps) => {
+const DoctorRecommendations = ({
+  doctors,
+  analysisCondition,
+}: DoctorRecommendationsProps) => {
   return (
     <div className="mt-8">
       <Card className="shadow-lg">
         <CardHeader>
-          <CardTitle className="text-2xl font-serif">Recommended Specialists</CardTitle>
-          <CardDescription>
-            Here are some specialists in your area who can help.
-          </CardDescription>
+          <div className="flex justify-between items-start">
+            <div>
+              <CardTitle className="text-2xl font-serif">
+                Recommended Doctors
+              </CardTitle>
+              <CardDescription>
+                Based on your analysis for: {analysisCondition}
+              </CardDescription>
+            </div>
+            <ShieldCheck className="w-8 h-8 text-primary" />
+          </div>
         </CardHeader>
         <CardContent>
-            <div className='mb-6'>
-                <MapView doctors={doctors} />
-            </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {doctors.map((doctor, index) => (
+          <div className="space-y-4">
+            {doctors.slice(0, 3).map((doctor, index) => (
               <DoctorCard key={index} doctor={doctor} />
             ))}
           </div>
+
+          {doctors.length > 3 && (
+            <div className="mt-6 text-center">
+              <Button variant="outline">View all doctors</Button>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

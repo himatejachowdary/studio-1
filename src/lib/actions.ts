@@ -1,8 +1,8 @@
 'use server';
 import {
   analyzeSymptomsAndSuggestConditions,
-  type Analysis,
 } from '@/ai/flows/analyze-symptoms-and-suggest-conditions';
+import type { Analysis } from '@/ai/flows/analyze-symptoms-and-suggest-conditions';
 import { z } from 'zod';
 import { ai } from '@/ai/genkit';
 import { Doctor, doctorSchema } from '@/lib/types';
@@ -39,7 +39,7 @@ export async function findNearbyDoctors(
     name: 'doctorsPrompt',
     input: { schema: findDoctorsInputSchema },
     output: { schema: z.array(doctorSchema) },
-    prompt: `Find 3 real, highly-rated doctors or clinics near latitude {{latitude}} and longitude {{longitude}} that specialize in {{specialty}}. Include their real name, full address, and a real phone number. Do not make up information.`,
+    prompt: `Find 5 real, highly-rated doctors, clinics, or hospitals near latitude {{latitude}} and longitude {{longitude}} that specialize in {{specialty}}. Include their real name, full address, a real phone number, and specialty. Also include the approximate distance from the provided coordinates in kilometers (e.g., "4 km"). Do not make up information.`,
   });
 
   const result = await doctorsPrompt(validatedInput);
