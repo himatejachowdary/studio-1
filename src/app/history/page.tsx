@@ -12,7 +12,13 @@ import {
   CardTitle,
   CardDescription,
 } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
+import { Badge, BadgeProps } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
 import { signOut } from 'firebase/auth';
@@ -22,22 +28,29 @@ import { firebaseConfig } from '@/firebase/config';
 type Diagnosis = {
   id: string;
   symptoms: string;
-  medicalHistory: string;
-  possibleConditions: string;
-  confidenceLevel: string;
-  nextSteps: string;
+  medicalHistory?: string;
+  diagnosis: { name: string; explanation: string }[];
+  urgency: 'LOW' | 'MEDIUM' | 'HIGH';
+  departments: string[];
   timestamp: Timestamp;
 };
 
 function DiagnosisCard({ diagnosis }: { diagnosis: Diagnosis }) {
     const date = diagnosis.timestamp?.toDate ? diagnosis.timestamp.toDate() : new Date();
 
+    let urgencyVariant: BadgeProps["variant"] = "secondary";
+    if (diagnosis.urgency === 'HIGH') {
+      urgencyVariant = "destructive";
+    } else if (diagnosis.urgency === 'MEDIUM') {
+      urgencyVariant = "default";
+    }
+
     return (
     <Card className="hover:shadow-md transition-shadow">
       <CardHeader>
         <div className="flex justify-between items-start gap-4">
             <div>
-                <CardTitle className="font-headline text-xl">{diagnosis.possibleConditions.split(',')[0]}</CardTitle>
+                <CardTitle className="font-headline text-xl">{diagnosis.diagnosis[0].name}</CardTitle>
                 <CardDescription>
                     {date.toLocaleDateString('en-US', {
                     year: 'numeric',
@@ -46,12 +59,8 @@ function DiagnosisCard({ diagnosis }: { diagnosis: Diagnosis }) {
                     })}
                 </CardDescription>
             </div>
-             <Badge variant={
-                diagnosis.confidenceLevel.toLowerCase() === 'high' ? 'default' :
-                diagnosis.confidenceLevel.toLowerCase() === 'low' ? 'destructive' :
-                'secondary'
-             } className="flex-shrink-0">
-                {diagnosis.confidenceLevel} Confidence
+             <Badge variant={urgencyVariant} className="flex-shrink-0">
+                {diagnosis.urgency} Urgency
             </Badge>
         </div>
       </CardHeader>
@@ -68,11 +77,24 @@ function DiagnosisCard({ diagnosis }: { diagnosis: Diagnosis }) {
         )}
         <div>
           <h4 className="font-semibold mb-1 text-primary">AI-Suggested Conditions</h4>
-          <p className="text-sm text-muted-foreground">{diagnosis.possibleConditions}</p>
+          <Accordion type="single" collapsible className="w-full">
+            {diagnosis.diagnosis.map((diag, index) => (
+              <AccordionItem value={`item-${index}`} key={index}>
+                <AccordionTrigger>{diag.name}</AccordionTrigger>
+                <AccordionContent>
+                  {diag.explanation}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
         </div>
         <div>
-          <h4 className="font-semibold mb-1 text-primary">Recommended Next Steps</h4>
-          <p className="text-sm text-muted-foreground">{diagnosis.nextSteps}</p>
+          <h4 className="font-semibold mb-1 text-primary">Recommended Departments</h4>
+           <div className="flex flex-wrap gap-2">
+            {diagnosis.departments.map((dept) => (
+              <Badge key={dept} variant="outline">{dept}</Badge>
+            ))}
+          </div>
         </div>
       </CardContent>
     </Card>

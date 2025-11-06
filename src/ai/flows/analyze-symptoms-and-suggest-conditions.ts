@@ -30,21 +30,14 @@ export type AnalyzeSymptomsAndSuggestConditionsInput = z.infer<
 >;
 
 const AnalyzeSymptomsAndSuggestConditionsOutputSchema = z.object({
-  possibleConditions: z
-    .string()
-    .describe('A list of possible medical conditions based on the symptoms.'),
-  confidenceLevel: z
-    .string()
-    .describe(
-      'A subjective confidence level (e.g., low, medium, high) in the accuracy of the suggested conditions.'
-    ),
-  nextSteps: z
-    .string()
-    .describe(
-      'Recommended next steps for the user, such as consulting a doctor or seeking medical advice.'
-    ),
-  specialty: z.string().describe('The medical specialty most relevant to the suggested conditions (e.g., "Cardiologist", "Dermatologist", "General Physician").'),
+  diagnosis: z.array(z.object({
+    name: z.string().describe('A possible disease name.'),
+    explanation: z.string().describe('A short explanation for the possible disease.'),
+  })).describe('A list of the top 3 most likely diseases.'),
+  urgency: z.enum(['LOW', 'MEDIUM', 'HIGH']).describe('The urgency level of the condition.'),
+  departments: z.array(z.string()).describe('A list of recommended hospital departments.'),
 });
+
 export type AnalyzeSymptomsAndSuggestConditionsOutput = z.infer<
   typeof AnalyzeSymptomsAndSuggestConditionsOutputSchema
 >;
@@ -60,20 +53,28 @@ const prompt = ai.definePrompt({
   input: {schema: AnalyzeSymptomsAndSuggestConditionsInputSchema},
   output: {schema: AnalyzeSymptomsAndSuggestConditionsOutputSchema},
   model: 'gemini-1.5-flash',
-  prompt: `You are an AI-powered medical assistant that analyzes symptoms
-provided by users and suggests possible medical conditions. Consider
-the user's medical history if provided and if the user has requested
-it to be used.
+  prompt: `You are a medical triage assistant.
 
-Symptoms: {{{symptoms}}}
+Task:
+- User will input symptoms in normal human language.
+- You must analyse and return:
+    * possible disease names (top 3 most likely)
+    * short explanation for each
+    * urgency level (LOW / MEDIUM / HIGH)
+    * recommended hospital departments
 
-Medical History: {{#if useMedicalHistory}}{{{medicalHistory}}}{{else}}Not Used{{/if}}
+Rules:
+- Do NOT give medicine names.
+- If symptoms are unclear -> ask for more symptoms.
+- Keep output short and simple human readable.
 
-Based on the symptoms, provide a list of possible conditions, a
-confidence level in your suggestions, recommended next steps for the
-user, and the single most relevant medical specialty to consult for the top suggested condition.
+User Symptoms: {{{symptoms}}}
 
-Output in JSON format.
+{{#if useMedicalHistory}}
+User Medical History: {{{medicalHistory}}}
+{{/if}}
+
+Return JSON only.
 `,
 });
 

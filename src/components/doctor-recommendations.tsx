@@ -14,7 +14,7 @@ type Props = {
 
 export function DoctorRecommendations({ analysis, doctors, isLoading: analysisLoading }: Props) {
   
-  const isSos = analysis?.possibleConditions === 'Emergency Care';
+  const isSos = analysis?.departments.includes('Emergency');
 
   const renderContent = () => {
     if (analysisLoading) {
@@ -87,7 +87,12 @@ export function DoctorRecommendations({ analysis, doctors, isLoading: analysisLo
   };
   
   const cardTitle = isSos ? 'Nearby Hospitals' : analysis ? 'Recommended Doctors' : 'Doctor Suggestions';
-  const cardDescription = isSos ? 'Emergency services near you' : analysis ? `Based on your analysis for: ${analysis.possibleConditions.split(',')[0]}` : undefined;
+  const cardDescription = isSos 
+    ? 'Emergency services near you' 
+    : analysis 
+    ? `Based on your analysis for: ${analysis.diagnosis[0].name}`
+    : undefined;
+
 
   return (
     <Card className="h-full flex flex-col">

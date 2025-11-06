@@ -62,12 +62,15 @@ export async function getAnalysis(
   }
   
   let doctors: Doctor[] | null = null;
-  if (validatedFields.data.latitude && validatedFields.data.longitude && analysisResult.specialty) {
+  // Use the first recommended department to find doctors
+  const specialty = analysisResult.departments?.[0];
+
+  if (validatedFields.data.latitude && validatedFields.data.longitude && specialty) {
       try {
         const doctorResult = await findNearbyDoctors({
             latitude: validatedFields.data.latitude,
             longitude: validatedFields.data.longitude,
-            specialty: analysisResult.specialty,
+            specialty: specialty,
         });
         doctors = doctorResult.doctors;
       } catch (e: any) {

@@ -4,6 +4,12 @@ import { Badge, BadgeProps } from '@/components/ui/badge';
 import type { AnalysisResult } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion"
 
 type Props = {
   analysis: AnalysisResult | null;
@@ -55,26 +61,39 @@ export function AnalysisResults({ analysis, isLoading, error }: Props) {
       );
     }
 
-    let confidenceVariant: BadgeProps["variant"] = "secondary";
-    if (analysis.confidenceLevel.toLowerCase() === 'high') {
-      confidenceVariant = "default";
-    } else if (analysis.confidenceLevel.toLowerCase() === 'low') {
-      confidenceVariant = "destructive";
+    let urgencyVariant: BadgeProps["variant"] = "secondary";
+    if (analysis.urgency === 'HIGH') {
+      urgencyVariant = "destructive";
+    } else if (analysis.urgency === 'MEDIUM') {
+      urgencyVariant = "default";
     }
 
     return (
       <div className="space-y-6 font-body">
         <div>
           <h3 className="font-semibold text-lg mb-2">Possible Conditions</h3>
-          <p className="text-muted-foreground">{analysis.possibleConditions}</p>
+           <Accordion type="single" collapsible className="w-full" defaultValue="item-0">
+            {analysis.diagnosis.map((diag, index) => (
+              <AccordionItem value={`item-${index}`} key={index}>
+                <AccordionTrigger>{diag.name}</AccordionTrigger>
+                <AccordionContent>
+                  {diag.explanation}
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
         </div>
         <div>
-          <h3 className="font-semibold text-lg mb-2">Confidence Level</h3>
-          <Badge variant={confidenceVariant}>{analysis.confidenceLevel}</Badge>
+          <h3 className="font-semibold text-lg mb-2">Urgency Level</h3>
+          <Badge variant={urgencyVariant}>{analysis.urgency}</Badge>
         </div>
         <div>
-          <h3 className="font-semibold text-lg mb-2">Recommended Next Steps</h3>
-          <p className="text-muted-foreground">{analysis.nextSteps}</p>
+          <h3 className="font-semibold text-lg mb-2">Recommended Departments</h3>
+          <div className="flex flex-wrap gap-2">
+            {analysis.departments.map((dept) => (
+              <Badge key={dept} variant="outline">{dept}</Badge>
+            ))}
+          </div>
         </div>
          <div className="text-xs text-muted-foreground/80 pt-4 border-t mt-6">
             <p><strong>Disclaimer:</strong> This is an AI-generated analysis and not a substitute for professional medical advice. Please consult a healthcare provider for any medical concerns.</p>

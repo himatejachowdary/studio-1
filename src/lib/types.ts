@@ -1,10 +1,12 @@
 import { z } from 'zod';
 
 export type AnalysisResult = {
-  possibleConditions: string;
-  confidenceLevel: string;
-  nextSteps: string;
-  specialty: string;
+  diagnosis: {
+    name: string;
+    explanation: string;
+  }[];
+  urgency: 'LOW' | 'MEDIUM' | 'HIGH';
+  departments: string[];
 };
 
 export const DoctorSchema = z.object({
