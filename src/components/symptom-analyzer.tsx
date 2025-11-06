@@ -50,10 +50,11 @@ export function SymptomAnalyzer({
     resolver: zodResolver(analyzerSchema),
   });
 
-  const getLocation = (): Promise<{ latitude: number; longitude: number }> => {
-    return new Promise((resolve, reject) => {
+  const getLocation = (): Promise<{ latitude: number; longitude: number } | null> => {
+    return new Promise((resolve) => {
       if (!navigator.geolocation) {
-        reject(new Error('Geolocation is not supported by your browser.'));
+        // Geolocation not supported, resolve with null
+        resolve(null);
       } else {
         navigator.geolocation.getCurrentPosition(
           (position) => {
@@ -63,7 +64,8 @@ export function SymptomAnalyzer({
             });
           },
           () => {
-            reject(new Error('Unable to retrieve your location. Please enable location services.'));
+            // User denied permission or other error, resolve with null
+            resolve(null);
           }
         );
       }
@@ -75,19 +77,16 @@ export function SymptomAnalyzer({
     setError(null);
     onAnalysisStart();
     
-    let locationData: { latitude?: number; longitude?: number } = {};
-    try {
-      locationData = await getLocation();
-    } catch (locationError: any) {
-      // Don't block analysis if location fails, but show a warning.
-      // We will still proceed with the analysis.
-      setError(locationError.message + ' Continuing analysis without location data.');
-    }
+    const locationData = await getLocation();
     
     const analysisInput: AnalysisInput = {
       ...data,
-      ...locationData,
+      ...(locationData || {}),
     };
+    
+    if (!locationData) {
+        setError('Could not get location. Analysis will proceed without location data, which may affect accuracy.');
+    }
 
     try {
       const result = await getAnalysisAction(analysisInput);
@@ -96,11 +95,8 @@ export function SymptomAnalyzer({
       const errorMessage = err.message || 'An unknown error occurred during analysis.';
       setError(errorMessage);
       onAnalysisError(errorMessage);
-      // We need to set loading to false here as well
-      setIsLoading(false);
+      setIsLoading(false); // Stop loading on error
     } 
-    // Don't set loading to false in a finally block,
-    // as onAnalysisComplete navigates away.
   };
 
   return (
@@ -115,9 +111,9 @@ export function SymptomAnalyzer({
       <form onSubmit={handleSubmit(handleAnalysisSubmit)}>
         <CardContent className="space-y-4">
           {error && (
-            <Alert variant={error.includes('without location') ? 'default' : "destructive"}>
+            <Alert variant={error.includes('location') ? 'default' : "destructive"}>
               <AlertTriangle className="h-4 w-4" />
-              <AlertTitle>{error.includes('without location') ? 'Location Warning' : 'Analysis Failed'}</AlertTitle>
+              <AlertTitle>{error.includes('location') ? 'Location Warning' : 'Analysis Failed'}</AlertTitle>
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
