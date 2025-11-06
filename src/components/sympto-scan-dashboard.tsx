@@ -5,7 +5,8 @@ import { SymptomAnalyzer } from './symptom-analyzer';
 import { AnalysisResults } from './analysis-results';
 import { DoctorRecommendations } from './doctor-recommendations';
 import { MapView } from './map-view';
-import type { AnalysisResult, Doctor } from '@/lib/types';
+import type { Doctor } from '@/lib/types';
+import type { AnalysisAndDocsResult } from '@/lib/actions';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { DatabaseZap, History, User } from 'lucide-react';
 import { useUser } from '@/firebase';
@@ -15,26 +16,36 @@ import { Skeleton } from './ui/skeleton';
 
 
 export function SymptoScanDashboard() {
-  const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
-  const [doctors, setDoctors] = useState<Doctor[] | null>(null);
+  const [analysisResult, setAnalysisResult] = useState<AnalysisAndDocsResult | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const { user, isUserLoading } = useUser();
 
-  const handleAnalysis = (res: AnalysisResult | null) => {
+  const handleAnalysis = (res: AnalysisAndDocsResult | null) => {
     setAnalysisResult(res);
     if(res) setError(null);
+  }
+  
+  const handleLoadingChange = (loading: boolean) => {
+    setIsLoading(loading);
+    // When a new analysis starts, clear old results immediately
+    if (loading) {
+      setAnalysisResult(null);
+      setError(null);
+    }
   }
 
   const handleSosSearch = async () => {
     setIsLoading(true);
-    setAnalysisResult(null);
-    setError(null);
-    const emergencyAnalysis: AnalysisResult = {
+    // You might need a separate server action for just emergency search
+    // For now, this is a placeholder. A dedicated action would be better.
+    const emergencyAnalysis: AnalysisAndDocsResult = {
       possibleConditions: 'Emergency Care',
       confidenceLevel: 'High',
       nextSteps: 'Seek immediate medical attention. We are locating the nearest hospitals for you.',
+      specialty: 'hospital',
+      doctors: [] // This would be populated by the action
     };
     setAnalysisResult(emergencyAnalysis);
     setIsLoading(false);
@@ -59,7 +70,7 @@ export function SymptoScanDashboard() {
         <div className="lg:col-span-2 flex flex-col gap-8">
           <SymptomAnalyzer
             onAnalysisUpdate={handleAnalysis}
-            onLoadingChange={setIsLoading}
+            onLoadingChange={handleLoadingChange}
             onErrorChange={setError}
             onSos={handleSosSearch}
             isUserLoggedIn={!!user}
@@ -99,10 +110,10 @@ export function SymptoScanDashboard() {
               <>
                 <DoctorRecommendations 
                   analysis={analysisResult} 
-                  onDoctorsFound={setDoctors} 
+                  doctors={analysisResult?.doctors ?? null}
                   isLoading={isLoading} 
                 />
-                <MapView doctors={doctors} />
+                <MapView doctors={analysisResult?.doctors} />
               </>
           )}
         </div>

@@ -1,13 +1,5 @@
 'use server';
 
-/**
- * @fileOverview Finds nearby doctors and hospitals using AI.
- *
- * - findNearbyDoctors - a function that finds nearby doctors based on location and specialty.
- * - FindNearbyDoctorsInput - The input type for the findNearbyDoctors function.
- * - FindNearbyDoctorsOutput - The return type for the findNearbyDoctors function.
- */
-
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import { DoctorSchema } from '@/lib/types';

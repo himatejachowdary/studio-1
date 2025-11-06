@@ -3,19 +3,24 @@
 
 import { analyzeSymptomsAndSuggestConditions } from "@/ai/flows/analyze-symptoms-and-suggest-conditions";
 import { z } from "zod";
-import type { AnalysisResult } from "./types";
+import type { AnalysisResult, Doctor } from "./types";
 import { saveDiagnosis } from "./data";
 import { getAuthenticatedAppForUser } from "@/lib/firebase-admin";
+import { findNearbyDoctors } from "./server-actions";
 
 const schema = z.object({
   symptoms: z.string().min(10, "Please describe your symptoms in more detail."),
   medicalHistory: z.string().optional(),
   useMedicalHistory: z.boolean().optional(),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
 });
+
+export type AnalysisAndDocsResult = AnalysisResult & { doctors: Doctor[] | null };
 
 type FormState = {
     message: string;
-    result: AnalysisResult | null;
+    result: AnalysisAndDocsResult | null;
     error: string | null;
 }
 
@@ -28,6 +33,8 @@ export async function getAnalysis(
     symptoms: formData.get('symptoms'),
     medicalHistory: formData.get('medicalHistory'),
     useMedicalHistory: formData.get('useMedicalHistory') === 'on',
+    latitude: parseFloat(formData.get('latitude') as string),
+    longitude: parseFloat(formData.get('longitude') as string),
   });
   
   if (!validatedFields.success) {
@@ -38,10 +45,13 @@ export async function getAnalysis(
     };
   }
 
-  let result: AnalysisResult;
+  let analysisResult: Awaited<ReturnType<typeof analyzeSymptomsAndSuggestConditions>>;
   try {
-    // We can still get the analysis even if the user isn't logged in or server is misconfigured
-    result = await analyzeSymptomsAndSuggestConditions(validatedFields.data);
+    analysisResult = await analyzeSymptomsAndSuggestConditions({
+      symptoms: validatedFields.data.symptoms,
+      medicalHistory: validatedFields.data.medicalHistory,
+      useMedicalHistory: validatedFields.data.useMedicalHistory,
+    });
   } catch (e: any) {
     console.error("AI analysis failed:", e);
     return { 
@@ -51,37 +61,53 @@ export async function getAnalysis(
     };
   }
   
+  let doctors: Doctor[] | null = null;
+  if (validatedFields.data.latitude && validatedFields.data.longitude && analysisResult.specialty) {
+      try {
+        const doctorResult = await findNearbyDoctors({
+            latitude: validatedFields.data.latitude,
+            longitude: validatedFields.data.longitude,
+            specialty: analysisResult.specialty,
+        });
+        doctors = doctorResult.doctors;
+      } catch (e: any) {
+        console.error("Doctor search failed:", e);
+        // Don't block the user from seeing their analysis if doctor search fails
+      }
+  }
+
+
+  const fullResult: AnalysisAndDocsResult = {
+    ...analysisResult,
+    doctors,
+  }
+
   try {
-    // This function will throw an error if the server is not configured, which we catch below.
     const { currentUser } = await getAuthenticatedAppForUser();
     if (currentUser?.uid) {
-       // Attempt to save the analysis.
        await saveDiagnosis(currentUser.uid, {
-        ...result,
+        ...analysisResult,
         symptoms: validatedFields.data.symptoms,
         medicalHistory: validatedFields.data.medicalHistory || '',
       });
       return {
           message: "Analysis complete and saved", 
-          result, 
+          result: fullResult, 
           error: null,
       };
     }
   } catch(e: any) {
       console.warn("Could not save diagnosis to history. This is expected if the server is not configured for Firebase Admin.", e.message);
-      // This path is taken if the server environment is not configured.
-      // We return the result to the user, but log the server-side error.
       return { 
         message: "Analysis complete, but failed to save to history.", 
-        result, 
-        error: null, // We don't show a blocking error to the user for this.
+        result: fullResult, 
+        error: null,
     };
   }
 
-  // This case means the user is not logged in. We can still return the result.
   return {
     message: "Analysis complete",
-    result,
+    result: fullResult,
     error: null,
   }
 }

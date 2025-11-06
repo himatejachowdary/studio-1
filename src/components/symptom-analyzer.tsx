@@ -1,15 +1,15 @@
 'use client';
 
-import { useActionState, useEffect, useRef } from 'react';
+import { useActionState, useEffect, useRef, useState } from 'react';
 import { useFormStatus } from 'react-dom';
 import { getAnalysis } from '@/lib/actions';
+import type { AnalysisAndDocsResult } from '@/lib/actions';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import type { AnalysisResult } from '@/lib/types';
-import { FileText, Bot, Siren } from 'lucide-react';
+import { FileText, Bot, Siren, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
   AlertDialog,
@@ -24,7 +24,7 @@ import {
 } from "@/components/ui/alert-dialog"
 
 type SymptomAnalyzerProps = {
-  onAnalysisUpdate: (result: AnalysisResult | null) => void;
+  onAnalysisUpdate: (result: AnalysisAndDocsResult | null) => void;
   onLoadingChange: (isLoading: boolean) => void;
   onErrorChange: (error: string | null) => void;
   onSos: () => void;
@@ -64,10 +64,22 @@ export function SymptomAnalyzer({ onAnalysisUpdate, onLoadingChange, onErrorChan
   const initialState = { message: '', result: null, error: null };
   const [state, formAction] = useActionState(getAnalysis, initialState);
   const formRef = useRef<HTMLFormElement>(null);
+  const [location, setLocation] = useState<{lat: number | null, lon: number | null, error: string | null}>({lat: null, lon: null, error: null});
+
   const { toast } = useToast();
 
   useEffect(() => {
-    // Listen for form submission state changes
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            setLocation({ lat: position.coords.latitude, lon: position.coords.longitude, error: null });
+        },
+        (error) => {
+            setLocation({ lat: null, lon: null, error: "Location access denied. Doctor recommendations will be unavailable."});
+        }
+    );
+  }, []);
+
+  useEffect(() => {
     const form = formRef.current;
     if (!form) return;
 
@@ -145,6 +157,14 @@ export function SymptomAnalyzer({ onAnalysisUpdate, onLoadingChange, onErrorChan
         </CardHeader>
         <form action={formAction} ref={formRef} data-form-id="symptom-analyzer-form">
           <CardContent className="space-y-6">
+            {location.error && (
+                <div className="p-3 bg-yellow-100 dark:bg-yellow-900/50 text-yellow-800 dark:text-yellow-200 rounded-md text-sm flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4"/>
+                    {location.error}
+                </div>
+            )}
+            <input type="hidden" name="latitude" value={location.lat ?? ""} />
+            <input type="hidden" name="longitude" value={location.lon ?? ""} />
             <div className="space-y-2">
               <Label htmlFor="symptoms">Describe your symptoms</Label>
               <Textarea

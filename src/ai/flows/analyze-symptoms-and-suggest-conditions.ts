@@ -43,6 +43,7 @@ const AnalyzeSymptomsAndSuggestConditionsOutputSchema = z.object({
     .describe(
       'Recommended next steps for the user, such as consulting a doctor or seeking medical advice.'
     ),
+    specialty: z.string().describe('The medical specialty most relevant to the suggested conditions (e.g., "Cardiologist", "Dermatologist", "General Physician").'),
 });
 export type AnalyzeSymptomsAndSuggestConditionsOutput = z.infer<
   typeof AnalyzeSymptomsAndSuggestConditionsOutputSchema
@@ -69,8 +70,8 @@ Symptoms: {{{symptoms}}}
 Medical History: {{#if useMedicalHistory}}{{{medicalHistory}}}{{else}}Not Used{{/if}}
 
 Based on the symptoms, provide a list of possible conditions, a
-confidence level in your suggestions, and recommended next steps for the
-user.
+confidence level in your suggestions, recommended next steps for the
+user, and the single most relevant medical specialty to consult for the top suggested condition.
 
 Output in JSON format.
 `,

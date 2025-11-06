@@ -4,6 +4,7 @@ export type AnalysisResult = {
   possibleConditions: string;
   confidenceLevel: string;
   nextSteps: string;
+  specialty: string;
 };
 
 export const DoctorSchema = z.object({

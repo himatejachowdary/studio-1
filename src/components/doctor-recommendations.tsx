@@ -1,81 +1,41 @@
 'use client';
 
-import { Building, MapPin, User, ShieldCheck, Loader, Phone } from 'lucide-react';
+import { Building, MapPin, User, ShieldCheck, Loader } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import type { Doctor, AnalysisResult } from '@/lib/types';
-import { useEffect, useState } from 'react';
-import { findNearbyDoctors } from '@/ai/flows/find-nearby-doctors';
+import { Skeleton } from './ui/skeleton';
 
 type Props = {
-  analysis: AnalysisResult | null;
-  onDoctorsFound: (doctors: Doctor[] | null) => void;
+  analysis: (AnalysisResult & { doctors: Doctor[] | null }) | null;
+  doctors: Doctor[] | null;
   isLoading: boolean;
 };
 
-export function DoctorRecommendations({ analysis, onDoctorsFound, isLoading: analysisLoading }: Props) {
-  const [doctors, setDoctors] = useState<Doctor[] | null>(null);
-  const [isFetching, setIsFetching] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
+export function DoctorRecommendations({ analysis, doctors, isLoading: analysisLoading }: Props) {
+  
   const isSos = analysis?.possibleConditions === 'Emergency Care';
-
-  useEffect(() => {
-    if (analysis && analysis.possibleConditions) {
-      const fetchDoctors = async (latitude: number, longitude: number) => {
-        setIsFetching(true);
-        setError(null);
-        try {
-          const specialty = isSos ? "hospital" : analysis.possibleConditions.split(',')[0].trim();
-          const result = await findNearbyDoctors({ latitude, longitude, specialty });
-          setDoctors(result.doctors);
-          onDoctorsFound(result.doctors);
-        } catch (e) {
-          setError('Could not fetch doctor recommendations. Please try again.');
-          console.error(e);
-          onDoctorsFound(null);
-        } finally {
-          setIsFetching(false);
-        }
-      };
-
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          fetchDoctors(position.coords.latitude, position.coords.longitude);
-        },
-        () => {
-          setError('Location access is required to find nearby doctors.');
-          // Fallback to default location for demo purposes
-          fetchDoctors(28.6139, 77.2090); 
-        }
-      );
-    } else {
-        setDoctors(null);
-        onDoctorsFound(null);
-    }
-  }, [analysis, onDoctorsFound, isSos]);
 
   const renderContent = () => {
     if (analysisLoading) {
       return (
-         <div className="flex items-center justify-center p-8 text-muted-foreground">
-          <Loader className="w-6 h-6 animate-spin mr-2" />
-          <span>Waiting for analysis...</span>
+         <div className="space-y-4 p-4">
+          <div className="flex items-center gap-4">
+            <Skeleton className="w-10 h-10 rounded-full" />
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-3 w-24" />
+            </div>
+          </div>
+           <div className="flex items-center gap-4">
+            <Skeleton className="w-10 h-10 rounded-full" />
+            <div className="space-y-2">
+              <Skeleton className="h-4 w-40" />
+              <Skeleton className="h-3 w-20" />
+            </div>
+          </div>
         </div>
       )
-    }
-
-    if (isFetching) {
-      return (
-        <div className="flex items-center justify-center p-8 text-muted-foreground">
-          <Loader className="w-6 h-6 animate-spin mr-2" />
-          <span>Finding nearby {isSos ? 'hospitals' : 'doctors'}...</span>
-        </div>
-      );
-    }
-    
-    if (error) {
-        return <p className="text-destructive p-4">{error}</p>
     }
 
     if (!analysis) {
@@ -92,7 +52,12 @@ export function DoctorRecommendations({ analysis, onDoctorsFound, isLoading: ana
     }
 
     if (!doctors || doctors.length === 0) {
-      return <p className="text-muted-foreground p-4">No {isSos ? 'hospitals' : 'doctors'} found for the given criteria.</p>;
+      return (
+        <div className="flex items-center justify-center p-8 text-muted-foreground">
+          <Loader className="w-6 h-6 animate-spin mr-2" />
+          <span>No {isSos ? 'hospitals' : 'doctors'} found for the given criteria.</span>
+        </div>
+      )
     }
     
     return (
@@ -140,13 +105,6 @@ export function DoctorRecommendations({ analysis, onDoctorsFound, isLoading: ana
       </CardContent>
        {doctors && doctors.length > 0 &&
         <CardFooter className="flex-col items-stretch gap-2">
-          {isSos && 
-            <Button className="w-full" variant="destructive" asChild>
-                <a href="tel:108">
-                    <Phone className="mr-2" /> Call Emergency Services (108)
-                </a>
-            </Button>
-          }
           <Button className="w-full" variant="outline">View all {isSos ? 'hospitals' : 'doctors'}</Button>
         </CardFooter>
       }
