@@ -84,7 +84,7 @@ export const findNearbyDoctorsFlow = ai.defineFlow(
 Return the results in the specified JSON format. For each doctor and hospital, provide the name, specialty, full address, phone number, and a numerical rating. If a website is available, include it.`;
 
     const { output } = await ai.generate({
-      model: 'gemini-1.5-flash-latest',
+      model: 'googleAI/gemini-1.5-flash',
       prompt: prompt,
       output: {
         schema: FindDoctorsOutputSchema,
