@@ -1,8 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import type { User } from 'firebase/auth';
-import { getTotpSecret } from '@/lib/actions';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -37,9 +36,10 @@ export function MfaEnrollment({ user }: MfaEnrollmentProps) {
     setIsLoading(true);
     setError(null);
     try {
-      const session = await TotpMultiFactorGenerator.generateSecret(user.multiFactor.session);
-      setSecret(session);
-      const uri = session.toUri();
+      const session = await multiFactor(user).getSession();
+      const totpSecret = await TotpMultiFactorGenerator.generateSecret(session);
+      setSecret(totpSecret);
+      const uri = totpSecret.toUri();
       const qrCode = await QRCode.toDataURL(uri);
       setQrCodeDataUrl(qrCode);
     } catch (e: any) {
@@ -169,7 +169,7 @@ export function MfaEnrollment({ user }: MfaEnrollmentProps) {
             </Button>
         ) : secret ? (
             <>
-                <Button onClick={() => setSecret(null)} variant="outline">Cancel</Button>
+                <Button onClick={() => { setSecret(null); setQrCodeDataUrl(null); }} variant="outline">Cancel</Button>
                 <Button onClick={handleVerifyEnrollment} disabled={isLoading}>
                     {isLoading && <Loader className="mr-2 h-4 w-4 animate-spin" />}
                     Verify & Enroll
