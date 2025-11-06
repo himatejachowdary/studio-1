@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getAnalysis } from '@/lib/actions';
 import { Analysis } from '@/lib/types';
+import { Calendar, Heart, Pencil, User } from 'lucide-react';
 
 const formSchema = z.object({
   symptoms: z.string().min(10, 'Please describe your symptoms in at least 10 characters.'),
@@ -46,24 +47,25 @@ const SymptomAnalyzer = ({ onAnalysisStart, onAnalysisComplete, onAnalysisError 
   };
 
   return (
-    <Card className="w-full shadow-lg">
-      <CardHeader>
+    <Card className="w-full shadow-lg border-0">
+      <CardHeader className="text-center">
         <CardTitle className="text-3xl font-serif">Symptom Analyzer</CardTitle>
         <CardDescription>Describe your symptoms, and our AI will provide a preliminary analysis.</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleAnalysisSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(handleAnalysisSubmit)} className="space-y-8">
             <FormField
               control={form.control}
               name="symptoms"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-lg">Symptoms</FormLabel>
+                  <FormLabel className="text-lg flex items-center gap-2"><Pencil className="w-5 h-5 text-primary" /> How are you feeling?</FormLabel>
                   <FormControl>
                     <Textarea
                       placeholder="e.g., 'I have a sharp headache, slight fever, and a runny nose...'"
                       rows={5}
+                      className="resize-none"
                       {...field}
                     />
                   </FormControl>
@@ -71,15 +73,18 @@ const SymptomAnalyzer = ({ onAnalysisStart, onAnalysisComplete, onAnalysisError 
                 </FormItem>
               )}
             />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <FormField
                 control={form.control}
                 name="age"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-lg">Age</FormLabel>
+                    <FormLabel className="text-lg flex items-center gap-2"><Calendar className="w-5 h-5 text-primary" /> Age</FormLabel>
                     <FormControl>
-                      <Input type="number" {...field} />
+                        <div className="relative">
+                            <User className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                            <Input type="number" placeholder="Your age" className="pl-10" {...field} />
+                        </div>
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -90,26 +95,29 @@ const SymptomAnalyzer = ({ onAnalysisStart, onAnalysisComplete, onAnalysisError 
                 name="gender"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-lg">Gender</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a gender" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="male">Male</SelectItem>
-                        <SelectItem value="female">Female</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <FormLabel className="text-lg flex items-center gap-2"><Heart className="w-5 h-5 text-primary" /> Gender</FormLabel>
+                     <div className="relative">
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                            <SelectTrigger className="pl-10">
+                            <SelectValue placeholder="Select a gender" />
+                            </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                            <SelectItem value="male">Male</SelectItem>
+                            <SelectItem value="female">Female</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                        </SelectContent>
+                        </Select>
+                        <Heart className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
-            <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-              {form.formState.isSubmitting ? 'Analyzing...' : 'Analyze Symptoms'}
+            <Button type="submit" size="lg" className="w-full" disabled={form.formState.isSubmitting}>
+              {form.formState.isSubmitting ? 'Analyzing...' : 'Analyze My Symptoms'}
             </Button>
           </form>
         </Form>
