@@ -49,6 +49,15 @@ export default function SignupForm() {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
+    if (!auth) {
+        toast({
+            variant: "destructive",
+            title: "Sign up failed",
+            description: "Authentication service is not available.",
+        });
+        setIsSubmitting(false);
+        return;
+    }
     try {
       await createUserWithEmailAndPassword(auth, values.email, values.password);
       router.push('/dashboard');

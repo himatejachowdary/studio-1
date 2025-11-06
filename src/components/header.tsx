@@ -13,12 +13,14 @@ export default function Header({ className }: { className?: string }) {
   const router = useRouter();
 
   const handleSignOut = async () => {
-    await auth.signOut();
-    router.push('/');
+    if (auth) {
+      await auth.signOut();
+      router.push('/');
+    }
   };
 
   return (
-    <header className={cn("flex h-16 items-center justify-between border-b bg-white px-4 md:px-6", className)}>
+    <header className={cn("flex h-16 items-center justify-between border-b bg-white/80 backdrop-blur-sm px-4 md:px-6 sticky top-0 z-50", className)}>
       <Link href="/" className="flex items-center gap-2 font-semibold">
         <Stethoscope className="h-6 w-6 text-primary" />
         <span className="text-lg font-serif">SymptoScan AI</span>
