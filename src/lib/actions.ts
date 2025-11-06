@@ -4,7 +4,12 @@ import {
   analyzeSymptomsAndSuggestConditions,
   SymptomAnalysisInputSchema,
 } from '@/ai/flows/analyze-symptoms-and-suggest-conditions';
-import type { AnalysisInput, AnalysisResult, Diagnosis, NearbyDoctorResult } from '@/lib/types';
+import type {
+  AnalysisInput,
+  AnalysisResult,
+  Diagnosis,
+  NearbyDoctorResult,
+} from '@/lib/types';
 import { getAuthenticatedAppForUser } from '@/lib/firebase-admin';
 import { z } from 'zod';
 import { ai } from '@/ai/genkit';
@@ -24,7 +29,6 @@ export async function getAnalysis(
     };
   } catch (e: any) {
     console.error('Error in getAnalysis action:', e);
-    // Re-throw a plain Error object to ensure it's serializable.
     throw new Error(e.message || 'Failed to get analysis from the AI model.');
   }
 }
@@ -116,7 +120,6 @@ export async function findNearbyDoctors(
     return result;
   } catch (error: any) {
     console.error('Error in findNearbyDoctors action:', error);
-    // Re-throw a plain Error object to ensure it's serializable.
     throw new Error(error.message || 'Could not fetch doctor data.');
   }
 }

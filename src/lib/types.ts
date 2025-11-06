@@ -2,6 +2,8 @@
 export type AnalysisInput = {
     symptoms: string;
     medicalHistory?: string;
+    latitude?: number;
+    longitude?: number;
 };
 
 export type AnalysisResult = {
