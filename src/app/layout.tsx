@@ -2,22 +2,22 @@ import type {Metadata} from 'next';
 import './globals.css';
 import { cn } from "@/lib/utils"
 import { Toaster } from "@/components/ui/toaster"
-import { Alegreya, Belleza } from 'next/font/google';
+import { Inter, Lexend } from 'next/font/google';
 
-const belleza = Belleza({
+const fontSans = Inter({
   subsets: ['latin'],
-  weight: ['400'],
-  variable: '--font-headline',
+  variable: '--font-sans',
 });
 
-const alegreya = Alegreya({
+const fontSerif = Lexend({
   subsets: ['latin'],
-  variable: '--font-body',
+  variable: '--font-serif',
 });
+
 
 export const metadata: Metadata = {
-  title: 'Direct-to-Gemini',
-  description: 'A simple interface to chat with Gemini',
+  title: 'SymptoScan AI',
+  description: 'Analyze your symptoms with the power of AI',
 };
 
 export default function RootLayout({
@@ -28,7 +28,7 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head />
-      <body className={cn("min-h-screen bg-background font-body antialiased", belleza.variable, alegreya.variable)}>
+      <body className={cn("min-h-screen bg-background font-sans antialiased", fontSans.variable, fontSerif.variable)}>
           {children}
         <Toaster />
       </body>

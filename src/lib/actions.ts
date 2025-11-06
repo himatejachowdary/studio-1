@@ -1,24 +1,47 @@
 'use server';
-
-import { simplePromptFlow } from '@/ai/flows/simple-prompt-flow';
+import {
+  analyzeSymptomsAndSuggestConditions,
+  type Analysis,
+} from '@/ai/flows/analyze-symptoms-and-suggest-conditions';
 import { z } from 'zod';
+import { ai } from '@/ai/genkit';
+import { Doctor, doctorSchema } from '@/lib/types';
 
-const PromptInputSchema = z.string().min(1, 'Prompt cannot be empty.');
 
-/**
- * A simple server action that takes a text prompt, sends it to the AI,
- * and returns the AI's response as a string.
- * @param prompt The user's text prompt.
- * @returns A promise that resolves to the AI's text response.
- */
-export async function getSimpleResponse(prompt: string): Promise<string> {
-  try {
-    const validatedPrompt = PromptInputSchema.parse(prompt);
-    const response = await simplePromptFlow(validatedPrompt);
-    return response;
-  } catch (e: any) {
-    console.error('Error in getSimpleResponse action:', e);
-    // IMPORTANT: Always throw a new Error with a plain message.
-    throw new Error(e.message || 'An unexpected error occurred while contacting the AI.');
-  }
+const findDoctorsInputSchema = z.object({
+  specialty: z.string(),
+  latitude: z.number(),
+  longitude: z.number(),
+});
+
+export async function getAnalysis(
+  symptoms: string,
+  age: number,
+  gender: 'male' | 'female' | 'other'
+): Promise<Analysis> {
+  console.log('getting analysis for', symptoms, age, gender);
+  const analysis = await analyzeSymptomsAndSuggestConditions({
+    symptoms,
+    age,
+    gender,
+  });
+  return analysis;
+}
+
+export async function findNearbyDoctors(
+  specialty: string,
+  latitude: number,
+  longitude: number
+): Promise<Doctor[]> {
+  const validatedInput = findDoctorsInputSchema.parse({ specialty, latitude, longitude });
+
+  const doctorsPrompt = ai.definePrompt({
+    name: 'doctorsPrompt',
+    input: { schema: findDoctorsInputSchema },
+    output: { schema: z.array(doctorSchema) },
+    prompt: `Find 3 real, highly-rated doctors or clinics near latitude {{latitude}} and longitude {{longitude}} that specialize in {{specialty}}. Include their real name, full address, and a real phone number. Do not make up information.`,
+  });
+
+  const result = await doctorsPrompt(validatedInput);
+  return result.output!;
 }
