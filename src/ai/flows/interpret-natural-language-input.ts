@@ -44,7 +44,7 @@ const prompt = ai.definePrompt({
   name: 'interpretNaturalLanguageInputPrompt',
   input: {schema: InterpretNaturalLanguageInputInputSchema},
   output: {schema: InterpretNaturalLanguageInputOutputSchema},
-  model: 'gemini-1.5-flash-001',
+  model: 'gemini-pro',
   prompt: `You are a medical assistant. Please read the following symptoms provided by the user and return them as structured data.
 
 Symptoms: {{{symptoms}}}
