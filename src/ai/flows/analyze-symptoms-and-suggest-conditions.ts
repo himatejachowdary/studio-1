@@ -53,28 +53,27 @@ const prompt = ai.definePrompt({
   input: {schema: AnalyzeSymptomsAndSuggestConditionsInputSchema},
   output: {schema: AnalyzeSymptomsAndSuggestConditionsOutputSchema},
   model: 'gemini-1.5-flash',
-  prompt: `You are a medical triage assistant.
+  prompt: `You are a medical symptom analysis assistant.
 
-Task:
-- User will input symptoms in normal human language.
-- You must analyse and return:
-    * possible disease names (top 3 most likely)
-    * short explanation for each
-    * urgency level (LOW / MEDIUM / HIGH)
-    * recommended hospital departments
+User will input symptoms in plain English.
+
+Your task:
+- Understand symptoms
+- Generate 3 possible disease names
+- Give short explanation for each
+- Give urgency level: LOW / MEDIUM / HIGH
+- List recommended hospital departments
 
 Rules:
-- Do NOT give medicine names.
-- If symptoms are unclear -> ask for more symptoms.
-- Keep output short and simple human readable.
+- DO NOT recommend medicine
+- If symptoms are unclear -> ask for more info
+- Response MUST be ONLY JSON (no extra text, no explanation)
 
 User Symptoms: {{{symptoms}}}
 
 {{#if useMedicalHistory}}
 User Medical History: {{{medicalHistory}}}
 {{/if}}
-
-Return JSON only.
 `,
 });
 
